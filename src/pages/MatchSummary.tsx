@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Award, Book, RotateCcw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StudentStats {
   name: string;
@@ -32,6 +35,7 @@ const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { studentNames, results, difficulty } = location.state || {};
+  const [selectedStudent, setSelectedStudent] = useState(studentNames[0]);
 
   // Calculate individual student statistics
   const studentStats: StudentStats[] = studentNames.map((name: string) => {
@@ -67,6 +71,16 @@ const MatchSummary = () => {
     return "More practice needed";
   };
 
+  const selectedStatsData = studentStats.find(stats => stats.name === selectedStudent);
+  const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
+  const historicalData = generateHistoricalData(selectedStudent);
+  historicalData.push({
+    assessmentNumber: historicalData.length + 1,
+    accuracy: percentage,
+    responseTime: selectedStatsData?.averageResponseTime || 0,
+    student: selectedStudent
+  });
+
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
       <div className="space-y-8 slide-up">
@@ -79,106 +93,127 @@ const MatchSummary = () => {
           <p className="text-muted-foreground">Multiple Student Performance Report</p>
         </div>
 
-        {studentStats.map((stats) => {
-          const percentage = Math.round((stats.correct / stats.total) * 100);
-          const historicalData = generateHistoricalData(stats.name);
-          // Add current assessment data
-          historicalData.push({
-            assessmentNumber: historicalData.length + 1,
-            accuracy: percentage,
-            responseTime: stats.averageResponseTime,
-            student: stats.name
-          });
-          
-          return (
-            <Card key={stats.name} className="p-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">{stats.name}</h2>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Level: {difficulty}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold">{percentage}%</div>
-                    <div className="text-sm text-muted-foreground">Accuracy</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{stats.averageResponseTime}ms</div>
-                    <div className="text-sm text-muted-foreground">Avg. Response Time</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{getGrade(percentage)}</div>
-                    <div className="text-sm text-muted-foreground">Grade</div>
-                  </div>
-                </div>
-
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={historicalData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
-                      <YAxis yAxisId="left" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft' }} />
-                      <YAxis yAxisId="right" orientation="right" label={{ value: 'Response Time (ms)', angle: 90, position: 'insideRight' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        yAxisId="left"
-                        type="monotone"
-                        dataKey="accuracy"
-                        name="Accuracy"
-                        stroke="#4f46e5"
-                        activeDot={{ r: 8 }}
-                      />
-                      <Line
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey="responseTime"
-                        name="Response Time"
-                        stroke="#10b981"
-                        activeDot={{ r: 8 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div>
-                  <div className="text-sm font-medium mb-2">Performance Details</div>
-                  <div className="grid gap-2">
-                    {stats.words.map((result, index) => (
-                      <div
-                        key={index}
-                        className={`p-2 rounded-md text-sm flex justify-between items-center ${
-                          result.correct ? "bg-accent/10 text-accent" : "bg-destructive/10 text-destructive"
-                        }`}
-                      >
-                        <span>{result.word}</span>
-                        <div className="flex items-center gap-4">
-                          <span>{result.responseTime}ms</span>
-                          <span>{result.correct ? "Correct" : "Incorrect"}</span>
-                        </div>
-                      </div>
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>Select Student</Label>
+                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select a student" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {studentNames.map((name: string) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
-
-                <div className="text-accent font-medium text-center">
-                  {getFeedback(percentage)}
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
-            </Card>
-          );
-        })}
+              <span className="text-sm font-medium text-muted-foreground">
+                Level: {difficulty}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold">{percentage}%</div>
+                <div className="text-sm text-muted-foreground">Accuracy</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{selectedStatsData?.averageResponseTime}ms</div>
+                <div className="text-sm text-muted-foreground">Avg. Response Time</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{getGrade(percentage)}</div>
+                <div className="text-sm text-muted-foreground">Grade</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="h-64 w-full">
+                <h3 className="text-sm font-medium mb-2">Accuracy Trend</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={historicalData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
+                    <YAxis label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="accuracy"
+                      name="Accuracy"
+                      stroke="#4f46e5"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="h-64 w-full">
+                <h3 className="text-sm font-medium mb-2">Response Time Trend</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={historicalData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
+                    <YAxis label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="responseTime"
+                      name="Response Time"
+                      stroke="#10b981"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-medium mb-2">Performance Details</div>
+              <div className="grid gap-2">
+                {selectedStatsData?.words.map((result, index) => (
+                  <div
+                    key={index}
+                    className={`p-2 rounded-md text-sm flex justify-between items-center ${
+                      result.correct ? "bg-accent/10 text-accent" : "bg-destructive/10 text-destructive"
+                    }`}
+                  >
+                    <span>{result.word}</span>
+                    <div className="flex items-center gap-4">
+                      <span>{result.responseTime}ms</span>
+                      <span>{result.correct ? "Correct" : "Incorrect"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-accent font-medium text-center">
+              {getFeedback(percentage)}
+            </div>
+          </div>
+        </Card>
 
         <div className="grid grid-cols-2 gap-4">
           <Button
@@ -199,4 +234,3 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
-
