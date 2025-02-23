@@ -14,7 +14,13 @@ const MatchArena = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentStudent, setCurrentStudent] = useState("");
   const [score, setScore] = useState(0);
-  const [results, setResults] = useState<Array<{ word: string; correct: boolean; student: string }>>([]);
+  const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
+  const [results, setResults] = useState<Array<{
+    word: string;
+    correct: boolean;
+    student: string;
+    responseTime: number;
+  }>>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
 
@@ -22,17 +28,19 @@ const MatchArena = () => {
     if (!wordList || wordList.length === 0 || !studentNames || studentNames.length === 0) {
       navigate("/");
     } else {
-      // Select random student for first word
       setCurrentStudent(studentNames[Math.floor(Math.random() * studentNames.length)]);
+      setWordStartTime(Date.now());
     }
   }, [wordList, studentNames, navigate]);
 
   const selectNextStudent = () => {
     const nextStudent = studentNames[Math.floor(Math.random() * studentNames.length)];
     setCurrentStudent(nextStudent);
+    setWordStartTime(Date.now());
   };
 
   const handleAnswer = async (isCorrect: boolean) => {
+    const responseTime = Date.now() - wordStartTime;
     setShowFeedback(true);
     const correct = isCorrect;
     
@@ -46,7 +54,8 @@ const MatchArena = () => {
     setResults([...results, { 
       word: wordList[currentWordIndex], 
       correct,
-      student: currentStudent
+      student: currentStudent,
+      responseTime
     }]);
 
     setTimeout(() => {
@@ -63,7 +72,8 @@ const MatchArena = () => {
             results: [...results, { 
               word: wordList[currentWordIndex], 
               correct,
-              student: currentStudent
+              student: currentStudent,
+              responseTime
             }],
             difficulty
           }
