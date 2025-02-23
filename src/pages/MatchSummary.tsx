@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Award, Book, RotateCcw } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface StudentStats {
   name: string;
@@ -15,6 +16,17 @@ interface StudentStats {
     responseTime: number;
   }>;
 }
+
+// Simulate historical data - in a real app, this would come from a database
+const generateHistoricalData = (studentName: string) => {
+  const numberOfAssessments = 5; // Including the current one
+  return Array.from({ length: numberOfAssessments }, (_, i) => ({
+    assessmentNumber: i + 1,
+    accuracy: Math.round(Math.random() * 30 + 70), // Random accuracy between 70-100%
+    responseTime: Math.round(Math.random() * 1000 + 500), // Random response time between 500-1500ms
+    student: studentName
+  }));
+};
 
 const MatchSummary = () => {
   const location = useLocation();
@@ -69,6 +81,14 @@ const MatchSummary = () => {
 
         {studentStats.map((stats) => {
           const percentage = Math.round((stats.correct / stats.total) * 100);
+          const historicalData = generateHistoricalData(stats.name);
+          // Add current assessment data
+          historicalData.push({
+            assessmentNumber: historicalData.length + 1,
+            accuracy: percentage,
+            responseTime: stats.averageResponseTime,
+            student: stats.name
+          });
           
           return (
             <Card key={stats.name} className="p-6">
@@ -93,6 +113,43 @@ const MatchSummary = () => {
                     <div className="text-2xl font-bold">{getGrade(percentage)}</div>
                     <div className="text-sm text-muted-foreground">Grade</div>
                   </div>
+                </div>
+
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={historicalData}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
+                      <YAxis yAxisId="left" label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft' }} />
+                      <YAxis yAxisId="right" orientation="right" label={{ value: 'Response Time (ms)', angle: 90, position: 'insideRight' }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="accuracy"
+                        name="Accuracy"
+                        stroke="#4f46e5"
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="responseTime"
+                        name="Response Time"
+                        stroke="#10b981"
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
 
                 <div>
@@ -142,3 +199,4 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
+
