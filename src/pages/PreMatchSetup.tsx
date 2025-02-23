@@ -5,23 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Book, GraduationCap } from "lucide-react";
+import { Book, GraduationCap, UserPlus, X } from "lucide-react";
 
 const PreMatchSetup = () => {
   const navigate = useNavigate();
-  const [studentName, setStudentName] = useState("");
+  const [studentNames, setStudentNames] = useState<string[]>([""]);
   const [wordList, setWordList] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("medium");
 
   const handleStart = () => {
-    if (!studentName || wordList.length === 0) return;
+    if (studentNames.filter(name => name.trim()).length === 0 || wordList.length === 0) return;
     navigate("/match-arena", { 
       state: { 
-        studentName, 
+        studentNames: studentNames.filter(name => name.trim()), 
         wordList, 
         difficulty 
       } 
     });
+  };
+
+  const addStudent = () => {
+    setStudentNames([...studentNames, ""]);
+  };
+
+  const removeStudent = (index: number) => {
+    const newStudents = studentNames.filter((_, i) => i !== index);
+    setStudentNames(newStudents.length ? newStudents : [""]); // Keep at least one student
+  };
+
+  const updateStudentName = (index: number, name: string) => {
+    const newStudents = [...studentNames];
+    newStudents[index] = name;
+    setStudentNames(newStudents);
   };
 
   return (
@@ -39,13 +54,35 @@ const PreMatchSetup = () => {
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="studentName">Student Name</Label>
-              <Input
-                id="studentName"
-                placeholder="Enter student name"
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-              />
+              <Label>Student Names</Label>
+              <div className="space-y-2">
+                {studentNames.map((name, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder={`Student ${index + 1}`}
+                      value={name}
+                      onChange={(e) => updateStudentName(index, e.target.value)}
+                    />
+                    {studentNames.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeStudent(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addStudent}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Student
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -82,7 +119,7 @@ const PreMatchSetup = () => {
           className="w-full"
           size="lg"
           onClick={handleStart}
-          disabled={!studentName || wordList.length === 0}
+          disabled={!studentNames[0] || wordList.length === 0}
         >
           <Book className="w-4 h-4 mr-2" />
           Start Assessment
