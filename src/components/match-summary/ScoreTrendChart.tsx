@@ -15,13 +15,15 @@ const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
   const [animationPercent, setAnimationPercent] = useState<number>(0);
 
   useEffect(() => {
-    // Reset animation when data changes
+    // Reset animation immediately when data changes
     setAnimationPercent(0);
     
-    // Animate from 0 to 100%
+    // Start animation after a brief delay to ensure reset is complete
     const timer = setTimeout(() => {
-      setAnimationPercent(100);
-    }, 100);
+      requestAnimationFrame(() => {
+        setAnimationPercent(100);
+      });
+    }, 50);
 
     return () => clearTimeout(timer);
   }, [data]);
