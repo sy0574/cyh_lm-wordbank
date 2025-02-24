@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { WordData } from "@/data/wordData";
@@ -60,27 +61,24 @@ const MatchArena = () => {
       pointsEarned
     };
 
-    setResults([...results, newResult]);
+    setResults(prev => [...prev, newResult]);
 
     setTimeout(() => {
       setShowFeedback(false);
       setShowPoints(false);
       
+      // 选择下一个学生，如果返回 null 说明游戏应该结束
+      const nextStudent = selectNextStudent();
+      
+      if (nextStudent === null) {
+        return; // 让 selectNextStudent 处理导航
+      }
+      
+      // 只有在有下一个学生的情况下才更新单词索引
       const nextWordIndex = currentWordIndex + 1;
       if (nextWordIndex < wordList.length) {
         setCurrentWordIndex(nextWordIndex);
         setWordStartTime(Date.now());
-        selectNextStudent();
-      } else {
-        navigate("/match-summary", {
-          state: {
-            students,
-            score,
-            total: results.length + 1,
-            results: [...results, newResult],
-            difficulty
-          }
-        });
       }
     }, 1500);
   };
@@ -125,3 +123,4 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
+
