@@ -19,3 +19,18 @@ export interface StudentScore {
   score: number;
 }
 
+export interface StudentStats {
+  name: string;
+  avatar: string;
+  correct: number;
+  total: number;
+  averageResponseTime: number;
+  words: Array<{
+    word: string;
+    correct: boolean;
+    responseTime: number;
+    pointsEarned: number;
+    answerNumber: number;
+    answeredAt?: Date;
+  }>;
+}
