@@ -1,7 +1,8 @@
 
 import { Student } from "@/types/match";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface StudentSelectorProps {
   students: Student[];
@@ -12,29 +13,30 @@ interface StudentSelectorProps {
 
 const StudentSelector = ({ students, selectedStudentId, setSelectedStudentId }: StudentSelectorProps) => {
   return (
-    <div className="space-y-1">
+    <div className="space-y-4">
       <Label>Select Student</Label>
-      <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select a student" />
-        </SelectTrigger>
-        <SelectContent>
-          {students.map((student) => (
-            <SelectItem
-              key={student.id}
-              value={student.id}
-              className="flex items-center gap-2"
-            >
-              <img
-                src={student.avatar}
-                alt={`${student.name}'s avatar`}
-                className="w-6 h-6 rounded-full inline mr-2"
-              />
-              {student.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap gap-3">
+        {students.map((student) => (
+          <button
+            key={student.id}
+            onClick={() => setSelectedStudentId(student.id)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+              "hover:bg-accent/50",
+              "border-2",
+              selectedStudentId === student.id
+                ? "border-accent bg-accent/10"
+                : "border-transparent bg-accent/5"
+            )}
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={student.avatar} alt={student.name} />
+              <AvatarFallback>{student.name[0]}</AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{student.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
