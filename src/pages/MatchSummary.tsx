@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Award, Book, RotateCcw } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import StudentSelector from "@/components/match-summary/StudentSelector";
+import PerformanceMetrics from "@/components/match-summary/PerformanceMetrics";
+import PerformanceCharts from "@/components/match-summary/PerformanceCharts";
+import PerformanceDetails from "@/components/match-summary/PerformanceDetails";
 
 interface StudentStats {
   name: string;
@@ -23,6 +24,13 @@ interface StudentStats {
     answerNumber: number;
   }>;
 }
+
+const getFeedback = (percentage: number) => {
+  if (percentage >= 90) return "Outstanding performance!";
+  if (percentage >= 70) return "Good job!";
+  if (percentage >= 50) return "Keep practicing!";
+  return "More practice needed";
+};
 
 const MatchSummary = () => {
   const location = useLocation();
@@ -71,21 +79,6 @@ const MatchSummary = () => {
     };
   });
 
-  const getGrade = (percentage: number) => {
-    if (percentage >= 90) return "A";
-    if (percentage >= 80) return "B";
-    if (percentage >= 70) return "C";
-    if (percentage >= 60) return "D";
-    return "F";
-  };
-
-  const getFeedback = (percentage: number) => {
-    if (percentage >= 90) return "Outstanding performance!";
-    if (percentage >= 70) return "Good job!";
-    if (percentage >= 50) return "Keep practicing!";
-    return "More practice needed";
-  };
-
   const selectedStatsData = studentStats.find(stats => 
     stats.name === students.find(s => s.id === selectedStudentId)?.name
   );
@@ -112,133 +105,29 @@ const MatchSummary = () => {
 
         <Card className="p-6">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>Select Student</Label>
-                <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select a student" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student: any) => (
-                      <SelectItem
-                        key={student.id}
-                        value={student.id}
-                        className="flex items-center gap-2"
-                      >
-                        <img
-                          src={student.avatar}
-                          alt={`${student.name}'s avatar`}
-                          className="w-6 h-6 rounded-full inline mr-2"
-                        />
-                        {student.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <span className="text-sm font-medium text-muted-foreground">
-                Level: {difficulty}
-              </span>
-            </div>
+            <StudentSelector
+              students={students}
+              selectedStudentId={selectedStudentId}
+              setSelectedStudentId={setSelectedStudentId}
+              difficulty={difficulty}
+            />
 
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold">{percentage}%</div>
-                <div className="text-sm text-muted-foreground">Accuracy</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{selectedStatsData?.averageResponseTime}ms</div>
-                <div className="text-sm text-muted-foreground">Avg. Response Time</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{getGrade(percentage)}</div>
-                <div className="text-sm text-muted-foreground">Grade</div>
-              </div>
-            </div>
+            {selectedStatsData && (
+              <>
+                <PerformanceMetrics
+                  percentage={percentage}
+                  averageResponseTime={selectedStatsData.averageResponseTime}
+                />
 
-            <div className="space-y-4">
-              <div className="h-64 w-full">
-                <h3 className="text-sm font-medium mb-2">Score Trend</h3>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={scoreData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
-                    <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      name="Score"
-                      stroke="#4f46e5"
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                <PerformanceCharts data={scoreData} />
 
-              <div className="h-64 w-full">
-                <h3 className="text-sm font-medium mb-2">Response Time Trend</h3>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={scoreData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
-                    <YAxis label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="responseTime"
-                      name="Response Time"
-                      stroke="#10b981"
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+                <PerformanceDetails words={selectedStatsData.words} />
 
-            <div>
-              <div className="text-sm font-medium mb-2">Performance Details</div>
-              <div className="grid gap-2">
-                {selectedStatsData?.words.map((result, index) => (
-                  <div
-                    key={index}
-                    className={`p-2 rounded-md text-sm flex justify-between items-center ${
-                      result.correct ? "bg-accent/10 text-accent" : "bg-destructive/10 text-destructive"
-                    }`}
-                  >
-                    <span>{result.word}</span>
-                    <div className="flex items-center gap-4">
-                      <span>{result.responseTime}ms</span>
-                      <span>{result.pointsEarned} points</span>
-                      <span>{result.correct ? "Correct" : "Incorrect"}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="text-accent font-medium text-center">
-              {getFeedback(percentage)}
-            </div>
+                <div className="text-accent font-medium text-center">
+                  {getFeedback(percentage)}
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
@@ -261,4 +150,3 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
-
