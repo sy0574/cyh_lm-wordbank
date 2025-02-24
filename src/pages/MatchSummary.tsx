@@ -9,6 +9,9 @@ import StudentSelector from "@/components/match-summary/StudentSelector";
 import PerformanceMetrics from "@/components/match-summary/PerformanceMetrics";
 import PerformanceCharts from "@/components/match-summary/PerformanceCharts";
 import PerformanceDetails from "@/components/match-summary/PerformanceDetails";
+import ClassSelector from "@/components/match-summary/ClassSelector";
+import Rankings from "@/components/match-summary/Rankings";
+import { getStudentsByClass } from "@/data/studentData";
 
 interface StudentStats {
   name: string;
@@ -37,6 +40,7 @@ const MatchSummary = () => {
   const navigate = useNavigate();
   const { students = [], results = [], difficulty = "medium" } = location.state || {};
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
+  const [selectedClass, setSelectedClass] = useState<string>("");
 
   useEffect(() => {
     if (!location.state) {
@@ -51,6 +55,14 @@ const MatchSummary = () => {
 
     if (students.length > 0 && !selectedStudentId) {
       setSelectedStudentId(students[0].id);
+    }
+
+    // 自动设置初始班级
+    if (students.length > 0) {
+      const firstStudent = students[0];
+      const studentData = getStudentsByClass("");
+      const studentClass = studentData.find(s => s.id === firstStudent.id)?.class || "";
+      setSelectedClass(studentClass);
     }
   }, [location.state, students, selectedStudentId, navigate]);
 
@@ -91,8 +103,26 @@ const MatchSummary = () => {
     responseTime: result.responseTime
   })) || [];
 
+  // 获取班级学生的排名
+  const getRankings = () => {
+    return studentStats
+      .map(stats => ({
+        student: students.find(s => s.name === stats.name)!,
+        score: stats.words.reduce((acc, word) => acc + word.pointsEarned, 0),
+        averageResponseTime: stats.averageResponseTime
+      }))
+      .sort((a, b) => {
+        // 首先按分数排序
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        // 分数相同时按响应时间排序
+        return a.averageResponseTime - b.averageResponseTime;
+      });
+  };
+
   return (
-    <div className="container max-w-2xl mx-auto py-12 px-4">
+    <div className="container max-w-[90rem] mx-auto py-12 px-4">
       <div className="space-y-8 slide-up">
         <div className="text-center space-y-2">
           <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
@@ -103,33 +133,49 @@ const MatchSummary = () => {
           <p className="text-muted-foreground">Multiple Student Performance Report</p>
         </div>
 
-        <Card className="p-6">
-          <div className="space-y-6">
-            <StudentSelector
-              students={students}
-              selectedStudentId={selectedStudentId}
-              setSelectedStudentId={setSelectedStudentId}
-              difficulty={difficulty}
-            />
-
-            {selectedStatsData && (
-              <>
-                <PerformanceMetrics
-                  percentage={percentage}
-                  averageResponseTime={selectedStatsData.averageResponseTime}
-                />
-
-                <PerformanceCharts data={scoreData} />
-
-                <PerformanceDetails words={selectedStatsData.words} />
-
-                <div className="text-accent font-medium text-center">
-                  {getFeedback(percentage)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                  <StudentSelector
+                    students={students}
+                    selectedStudentId={selectedStudentId}
+                    setSelectedStudentId={setSelectedStudentId}
+                    difficulty={difficulty}
+                  />
+                  <ClassSelector
+                    selectedClass={selectedClass}
+                    onClassChange={setSelectedClass}
+                  />
                 </div>
-              </>
-            )}
+
+                {selectedStatsData && (
+                  <>
+                    <PerformanceMetrics
+                      percentage={percentage}
+                      averageResponseTime={selectedStatsData.averageResponseTime}
+                    />
+
+                    <PerformanceCharts data={scoreData} />
+
+                    <PerformanceDetails words={selectedStatsData.words} />
+
+                    <div className="text-accent font-medium text-center">
+                      {getFeedback(percentage)}
+                    </div>
+                  </>
+                )}
+              </div>
+            </Card>
           </div>
-        </Card>
+
+          <div className="lg:col-span-1">
+            <Card className="p-6">
+              <Rankings rankings={getRankings()} />
+            </Card>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Button
