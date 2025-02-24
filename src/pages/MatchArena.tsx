@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { WordData } from "@/data/wordData";
@@ -10,6 +9,7 @@ import { MatchResult } from "@/types/match";
 import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
+import { MAX_TIME } from "@/utils/scoring";
 
 const MatchArena = () => {
   const location = useLocation();
@@ -125,4 +125,3 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
-
