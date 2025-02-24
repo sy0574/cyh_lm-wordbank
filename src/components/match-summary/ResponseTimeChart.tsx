@@ -1,5 +1,6 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
 
 interface ChartData {
   answerNumber: number;
@@ -11,6 +12,20 @@ interface ResponseTimeChartProps {
 }
 
 const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
+  const [animationPercent, setAnimationPercent] = useState<number>(0);
+
+  useEffect(() => {
+    // Reset animation when data changes
+    setAnimationPercent(0);
+    
+    // Animate from 0 to 100%
+    const timer = setTimeout(() => {
+      setAnimationPercent(100);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [data]);
+
   return (
     <div className="h-64 w-full">
       <h3 className="text-sm font-medium mb-2">Response Time Trend</h3>
@@ -34,7 +49,14 @@ const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
             dataKey="responseTime"
             name="Response Time"
             stroke="#10b981"
+            strokeWidth={2}
+            dot={{ r: 4 }}
             activeDot={{ r: 8 }}
+            animationBegin={0}
+            animationDuration={1500}
+            animationEasing="ease-in-out"
+            strokeDasharray="2000"
+            strokeDashoffset={((100 - animationPercent) / 100) * 2000}
           />
         </LineChart>
       </ResponsiveContainer>
