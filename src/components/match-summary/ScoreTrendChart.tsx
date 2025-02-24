@@ -1,15 +1,35 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 
 interface ChartData {
   answerNumber: number;
   score: number;
+  answeredAt?: Date;
 }
 
 interface ScoreTrendChartProps {
   data: ChartData[];
 }
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <p className="text-sm font-medium">Answer #{label}</p>
+        <p className="text-sm text-blue-600">Score: {data.score}</p>
+        {data.answeredAt && (
+          <p className="text-xs text-gray-500">
+            {format(new Date(data.answeredAt), 'yyyy-MM-dd HH:mm:ss')}
+          </p>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
 
 const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
   const [key, setKey] = useState(0);
@@ -43,7 +63,7 @@ const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="answerNumber" />
           <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
-          <Tooltip />
+          <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Line
             type="monotone"
@@ -66,3 +86,4 @@ const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
 };
 
 export default ScoreTrendChart;
+

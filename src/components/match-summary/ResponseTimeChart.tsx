@@ -1,26 +1,44 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 
 interface ChartData {
   answerNumber: number;
   responseTime: number;
+  answeredAt?: Date;
 }
 
 interface ResponseTimeChartProps {
   data: ChartData[];
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <p className="text-sm font-medium">Answer #{label}</p>
+        <p className="text-sm text-green-600">Response Time: {data.responseTime}ms</p>
+        {data.answeredAt && (
+          <p className="text-xs text-gray-500">
+            {format(new Date(data.answeredAt), 'yyyy-MM-dd HH:mm:ss')}
+          </p>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
+
 const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
-  const [key, setKey] = useState(0); // Add key to force remount
+  const [key, setKey] = useState(0);
   const [animationPercent, setAnimationPercent] = useState<number>(0);
 
   useEffect(() => {
-    // Reset chart by updating key
     setKey(prev => prev + 1);
     setAnimationPercent(0);
     
-    // Start animation after component remounts
     const timer = setTimeout(() => {
       setAnimationPercent(100);
     }, 100);
@@ -45,7 +63,7 @@ const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
           <YAxis label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }} />
-          <Tooltip />
+          <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Line
             type="monotone"
@@ -68,3 +86,4 @@ const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
 };
 
 export default ResponseTimeChart;
+

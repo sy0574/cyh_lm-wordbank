@@ -12,6 +12,8 @@ import PerformanceDetails from "@/components/match-summary/PerformanceDetails";
 import ClassSelector from "@/components/match-summary/ClassSelector";
 import Rankings from "@/components/match-summary/Rankings";
 import { getStudentsByClass } from "@/data/studentData";
+import { format } from "date-fns";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface StudentStats {
   name: string;
@@ -25,6 +27,7 @@ interface StudentStats {
     responseTime: number;
     pointsEarned: number;
     answerNumber: number;
+    answeredAt?: Date;
   }>;
 }
 
@@ -35,12 +38,22 @@ const getFeedback = (percentage: number) => {
   return "More practice needed";
 };
 
+const TIME_FILTERS = {
+  TODAY: "today",
+  THIS_WEEK: "this-week",
+  THIS_MONTH: "this-month",
+  ALL: "all"
+} as const;
+
+type TimeFilter = typeof TIME_FILTERS[keyof typeof TIME_FILTERS];
+
 const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { students = [], results = [], difficulty = "medium" } = location.state || {};
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(TIME_FILTERS.ALL);
 
   useEffect(() => {
     if (!location.state) {
@@ -57,7 +70,6 @@ const MatchSummary = () => {
       setSelectedStudentId(students[0].id);
     }
 
-    // 自动设置初始班级
     if (students.length > 0) {
       const firstStudent = students[0];
       const studentData = getStudentsByClass("");
@@ -70,8 +82,31 @@ const MatchSummary = () => {
     return null;
   }
 
+  const filterResultsByTime = (results: any[]) => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return results.filter(result => {
+      const resultDate = new Date(result.answeredAt || Date.now());
+      switch (timeFilter) {
+        case TIME_FILTERS.TODAY:
+          return resultDate >= startOfDay;
+        case TIME_FILTERS.THIS_WEEK:
+          return resultDate >= startOfWeek;
+        case TIME_FILTERS.THIS_MONTH:
+          return resultDate >= startOfMonth;
+        default:
+          return true;
+      }
+    });
+  };
+
   const studentStats: StudentStats[] = students.map((student: any) => {
-    const studentResults = results.filter((r: any) => r.student.id === student.id);
+    const studentResults = filterResultsByTime(
+      results.filter((r: any) => r.student.id === student.id)
+    );
     const correct = studentResults.filter((r: any) => r.correct).length;
     const totalResponseTime = studentResults.reduce((acc: number, curr: any) => acc + curr.responseTime, 0);
     
@@ -86,7 +121,8 @@ const MatchSummary = () => {
         correct: r.correct,
         responseTime: r.responseTime,
         pointsEarned: r.pointsEarned,
-        answerNumber: r.answerNumber
+        answerNumber: r.answerNumber,
+        answeredAt: r.answeredAt || new Date()
       }))
     };
   });
@@ -100,10 +136,10 @@ const MatchSummary = () => {
   const scoreData = selectedStatsData?.words.map(result => ({
     answerNumber: result.answerNumber,
     score: result.pointsEarned,
-    responseTime: result.responseTime
+    responseTime: result.responseTime,
+    answeredAt: result.answeredAt
   })) || [];
 
-  // 获取班级学生的排名
   const getRankings = () => {
     return studentStats
       .map(stats => ({
@@ -112,13 +148,72 @@ const MatchSummary = () => {
         averageResponseTime: stats.averageResponseTime
       }))
       .sort((a, b) => {
-        // 首先按分数排序
         if (b.score !== a.score) {
           return b.score - a.score;
         }
-        // 分数相同时按响应时间排序
         return a.averageResponseTime - b.averageResponseTime;
       });
+  };
+
+  const handleSaveReport = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Error",
+        description: "Unable to open print window. Please allow popups for this site.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const filteredStats = studentStats.filter(stat => {
+      const student = students.find(s => s.name === stat.name);
+      const studentData = getStudentsByClass("");
+      return selectedClass === "" || studentData.find(s => s.id === student?.id)?.class === selectedClass;
+    });
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Performance Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .student-data { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+            .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+            .metric { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Performance Report</h1>
+            <p>Class: ${selectedClass || 'All Classes'}</p>
+            <p>Time Period: ${timeFilter.replace('-', ' ').toUpperCase()}</p>
+            <p>Generated on: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</p>
+          </div>
+          ${filteredStats.map(stat => `
+            <div class="student-data">
+              <h2>${stat.name}</h2>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>Accuracy:</strong> ${Math.round((stat.correct / stat.total) * 100)}%
+                </div>
+                <div class="metric">
+                  <strong>Correct Answers:</strong> ${stat.correct}/${stat.total}
+                </div>
+                <div class="metric">
+                  <strong>Avg Response Time:</strong> ${stat.averageResponseTime}ms
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
@@ -148,6 +243,15 @@ const MatchSummary = () => {
                     selectedClass={selectedClass}
                     onClassChange={setSelectedClass}
                   />
+                </div>
+
+                <div className="flex justify-center">
+                  <ToggleGroup type="single" value={timeFilter} onValueChange={(value: TimeFilter) => setTimeFilter(value || TIME_FILTERS.ALL)}>
+                    <ToggleGroupItem value={TIME_FILTERS.TODAY}>Today</ToggleGroupItem>
+                    <ToggleGroupItem value={TIME_FILTERS.THIS_WEEK}>This Week</ToggleGroupItem>
+                    <ToggleGroupItem value={TIME_FILTERS.THIS_MONTH}>This Month</ToggleGroupItem>
+                    <ToggleGroupItem value={TIME_FILTERS.ALL}>All Time</ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
 
                 {selectedStatsData && (
@@ -185,7 +289,7 @@ const MatchSummary = () => {
             <RotateCcw className="w-4 h-4 mr-2" />
             New Assessment
           </Button>
-          <Button onClick={() => window.print()}>
+          <Button onClick={handleSaveReport}>
             <Book className="w-4 h-4 mr-2" />
             Save Report
           </Button>
@@ -196,3 +300,4 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
+
