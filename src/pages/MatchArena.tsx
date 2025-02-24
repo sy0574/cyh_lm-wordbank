@@ -70,12 +70,35 @@ const MatchArena = () => {
     }
   };
 
+  const shouldEndMatch = () => {
+    // 检查是否所有学生都已完成指定数量的问题
+    return students.every(student => 
+      (studentAnswerCounts[student.id] || 0) >= questionsPerStudent
+    );
+  };
+
   const selectNextStudent = () => {
+    // 首先检查是否应该结束比赛
+    if (shouldEndMatch()) {
+      navigate("/match-summary", {
+        state: {
+          students,
+          score,
+          total: results.length,
+          results,
+          difficulty
+        }
+      });
+      return;
+    }
+
+    // 筛选出还没有答完指定问题数量的学生
     const availableStudents = students.filter(student => 
       (studentAnswerCounts[student.id] || 0) < questionsPerStudent
     );
 
     if (availableStudents.length === 0) {
+      // 这是一个额外的安全检查
       navigate("/match-summary", {
         state: {
           students,
@@ -130,9 +153,11 @@ const MatchArena = () => {
       message: correct ? `+${pointsEarned} points!` : "Keep practicing!"
     });
 
+    // 更新学生答题计数
+    const newAnswerCount = (studentAnswerCounts[currentStudent.id] || 0) + 1;
     setStudentAnswerCounts(prev => ({
       ...prev,
-      [currentStudent.id]: (prev[currentStudent.id] || 0) + 1
+      [currentStudent.id]: newAnswerCount
     }));
 
     const newResult = { 
@@ -150,7 +175,7 @@ const MatchArena = () => {
       setShowPoints(false);
       
       const nextWordIndex = currentWordIndex + 1;
-      if (nextWordIndex < wordList.length) {
+      if (nextWordIndex < wordList.length && !shouldEndMatch()) {
         setCurrentWordIndex(nextWordIndex);
         selectNextStudent();
       } else {
@@ -208,3 +233,4 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
+
