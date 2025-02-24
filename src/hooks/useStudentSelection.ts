@@ -19,9 +19,7 @@ export const useStudentSelection = (
   const announceStudent = async (student: Student) => {
     try {
       if ('speechSynthesis' in window) {
-        // 取消任何正在进行的语音
         window.speechSynthesis.cancel();
-        
         const speech = new SpeechSynthesisUtterance(student.name + "'s turn");
         speech.rate = 0.8;
         speech.pitch = 1;
@@ -38,42 +36,21 @@ export const useStudentSelection = (
   };
 
   const shouldEndMatch = () => {
-    // 首先确保至少有一个学生回答过问题
+    // Check if any student has answered their questions
     if (Object.keys(studentAnswerCounts).length === 0) {
       return false;
     }
-    
-    // 检查是否所有学生都完成了指定数量的问题
-    const allStudentsCompleted = students.every(student => {
+
+    // Check if all students have completed their required questions
+    return students.every(student => {
       const answeredQuestions = studentAnswerCounts[student.id] || 0;
       return answeredQuestions >= questionsPerStudent;
-    });
-
-    // 检查是否有学生超过了指定的问题数量
-    const anyStudentExceeded = students.some(student => {
-      const answeredQuestions = studentAnswerCounts[student.id] || 0;
-      return answeredQuestions > questionsPerStudent;
-    });
-
-    return allStudentsCompleted || anyStudentExceeded;
-  };
-
-  const navigateToSummary = () => {
-    navigate("/match-summary", {
-      state: {
-        students,
-        score,
-        total: results.length,
-        results,
-        difficulty
-      }
     });
   };
 
   const selectNextStudent = () => {
-    // 先检查是否应该结束比赛
+    // Check if all students have completed their questions
     if (shouldEndMatch()) {
-      navigateToSummary();
       return null;
     }
 
@@ -81,6 +58,7 @@ export const useStudentSelection = (
     let attempts = 0;
     let selectedStudent: Student | null = null;
 
+    // Find the next student who hasn't completed their questions
     while (attempts < students.length && !selectedStudent) {
       if (nextStudentIndex >= students.length) {
         nextStudentIndex = 0;
@@ -101,8 +79,8 @@ export const useStudentSelection = (
       attempts++;
     }
 
+    // If no eligible student is found, return null to end the match
     if (!selectedStudent) {
-      navigateToSummary();
       return null;
     }
 
@@ -123,3 +101,4 @@ export const useStudentSelection = (
     studentAnswerCounts
   };
 };
+
