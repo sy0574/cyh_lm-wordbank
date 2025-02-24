@@ -5,41 +5,66 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Check, X, User } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+
+interface Student {
+  id: string;
+  name: string;
+  avatar: string;
+}
 
 const MatchArena = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { studentNames, wordList, difficulty } = location.state || {};
+  const { students, wordList, difficulty } = location.state || {};
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [currentStudent, setCurrentStudent] = useState("");
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [score, setScore] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
   const [results, setResults] = useState<Array<{
     word: string;
     correct: boolean;
-    student: string;
+    student: Student;
     responseTime: number;
   }>>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
 
   useEffect(() => {
-    if (!wordList || wordList.length === 0 || !studentNames || studentNames.length === 0) {
+    if (!wordList || wordList.length === 0 || !students || students.length === 0) {
       navigate("/");
     } else {
-      setCurrentStudent(studentNames[Math.floor(Math.random() * studentNames.length)]);
-      setWordStartTime(Date.now());
+      selectNextStudent();
     }
-  }, [wordList, studentNames, navigate]);
+  }, [wordList, students, navigate]);
+
+  const announceStudent = async (student: Student) => {
+    try {
+      const speech = new SpeechSynthesisUtterance(student.name + "'s turn");
+      speech.rate = 0.8;
+      speech.pitch = 1;
+      window.speechSynthesis.speak(speech);
+    } catch (error) {
+      console.error("TTS error:", error);
+      toast({
+        title: "TTS Error",
+        description: "Could not announce student name",
+        variant: "destructive",
+      });
+    }
+  };
 
   const selectNextStudent = () => {
-    const nextStudent = studentNames[Math.floor(Math.random() * studentNames.length)];
+    const nextStudent = students[Math.floor(Math.random() * students.length)];
     setCurrentStudent(nextStudent);
     setWordStartTime(Date.now());
+    announceStudent(nextStudent);
   };
 
   const handleAnswer = async (isCorrect: boolean) => {
+    if (!currentStudent) return;
+
     const responseTime = Date.now() - wordStartTime;
     setShowFeedback(true);
     const correct = isCorrect;
@@ -66,7 +91,7 @@ const MatchArena = () => {
       } else {
         navigate("/match-summary", {
           state: {
-            studentNames,
+            students,
             score,
             total: wordList.length,
             results: [...results, { 
@@ -101,9 +126,13 @@ const MatchArena = () => {
 
         <Card className="p-8">
           <div className="text-center space-y-6">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground mb-4">
-              <User className="w-4 h-4" />
-              <span className="font-medium">{currentStudent}</span>
+            <div className="flex flex-col items-center justify-center gap-2">
+              <img
+                src={currentStudent.avatar}
+                alt={`${currentStudent.name}'s avatar`}
+                className="w-16 h-16 rounded-full"
+              />
+              <span className="font-medium text-lg">{currentStudent.name}</span>
             </div>
             <h2 className="text-5xl font-bold tracking-tight">
               {wordList[currentWordIndex]}

@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface StudentStats {
   name: string;
+  avatar: string;
   correct: number;
   total: number;
   averageResponseTime: number;
@@ -20,7 +20,6 @@ interface StudentStats {
   }>;
 }
 
-// Simulate historical data - in a real app, this would come from a database
 const generateHistoricalData = (studentName: string) => {
   const numberOfAssessments = 5; // Including the current one
   return Array.from({ length: numberOfAssessments }, (_, i) => ({
@@ -34,17 +33,17 @@ const generateHistoricalData = (studentName: string) => {
 const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { studentNames, results, difficulty } = location.state || {};
-  const [selectedStudent, setSelectedStudent] = useState(studentNames[0]);
+  const { students, results, difficulty } = location.state || {};
+  const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id);
 
-  // Calculate individual student statistics
-  const studentStats: StudentStats[] = studentNames.map((name: string) => {
-    const studentResults = results.filter((r: any) => r.student === name);
+  const studentStats: StudentStats[] = students.map((student: any) => {
+    const studentResults = results.filter((r: any) => r.student.id === student.id);
     const correct = studentResults.filter((r: any) => r.correct).length;
     const totalResponseTime = studentResults.reduce((acc: number, curr: any) => acc + curr.responseTime, 0);
     
     return {
-      name,
+      name: student.name,
+      avatar: student.avatar,
       correct,
       total: studentResults.length,
       averageResponseTime: studentResults.length > 0 ? Math.round(totalResponseTime / studentResults.length) : 0,
@@ -71,14 +70,14 @@ const MatchSummary = () => {
     return "More practice needed";
   };
 
-  const selectedStatsData = studentStats.find(stats => stats.name === selectedStudent);
+  const selectedStatsData = studentStats.find(stats => stats.name === selectedStudentId);
   const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
-  const historicalData = generateHistoricalData(selectedStudent);
+  const historicalData = generateHistoricalData(selectedStudentId);
   historicalData.push({
     assessmentNumber: historicalData.length + 1,
     accuracy: percentage,
     responseTime: selectedStatsData?.averageResponseTime || 0,
-    student: selectedStudent
+    student: selectedStudentId
   });
 
   return (
@@ -98,14 +97,23 @@ const MatchSummary = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label>Select Student</Label>
-                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select a student" />
                   </SelectTrigger>
                   <SelectContent>
-                    {studentNames.map((name: string) => (
-                      <SelectItem key={name} value={name}>
-                        {name}
+                    {students.map((student: any) => (
+                      <SelectItem
+                        key={student.id}
+                        value={student.id}
+                        className="flex items-center gap-2"
+                      >
+                        <img
+                          src={student.avatar}
+                          alt={`${student.name}'s avatar`}
+                          className="w-6 h-6 rounded-full inline mr-2"
+                        />
+                        {student.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
