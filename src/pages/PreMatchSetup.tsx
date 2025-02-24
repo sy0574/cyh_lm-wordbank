@@ -40,6 +40,7 @@ const PreMatchSetup = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedGroup, setSelectedGroup] = useState<string>('1');
   const [selectedClass, setSelectedClass] = useState<string>("");
+  const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
   const classes = getUniqueClasses();
 
   const generateAvatar = (seed: string) => {
@@ -89,6 +90,13 @@ const PreMatchSetup = () => {
     }
   };
 
+  const handleQuestionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value);
+    if (!isNaN(value) && value > 0) {
+      setQuestionsPerStudent(value);
+    }
+  };
+
   const handleStart = () => {
     const currentGroup = groups.find(g => g.id === selectedGroup);
     if (!currentGroup) return;
@@ -121,7 +129,8 @@ const PreMatchSetup = () => {
       state: { 
         students: validStudents,
         wordList: filteredWords,
-        difficulty 
+        difficulty,
+        questionsPerStudent 
       } 
     });
   };
@@ -225,6 +234,17 @@ const PreMatchSetup = () => {
             ))}
 
             <div className="space-y-2">
+              <Label>Questions per Student</Label>
+              <Input
+                type="number"
+                min="1"
+                value={questionsPerStudent}
+                onChange={handleQuestionsChange}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Difficulty Level</Label>
               <div className="grid grid-cols-3 gap-2">
                 {["easy", "medium", "hard"].map((level) => (
@@ -257,3 +277,4 @@ const PreMatchSetup = () => {
 };
 
 export default PreMatchSetup;
+
