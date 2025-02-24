@@ -1,28 +1,32 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { wordData } from "@/data/wordData";
 
-interface DifficultySelectProps {
-  difficulty: string;
-  onDifficultyChange: (level: string) => void;
+interface CategorySelectProps {
+  category: string;
+  onCategoryChange: (category: string) => void;
 }
 
 export const DifficultySelect = ({
-  difficulty,
-  onDifficultyChange
-}: DifficultySelectProps) => {
+  category,
+  onCategoryChange
+}: CategorySelectProps) => {
+  // Get unique categories from wordData
+  const categories = Array.from(new Set(wordData.map(word => word.category)));
+
   return (
     <div className="space-y-2">
-      <Label>Difficulty Level</Label>
+      <Label>WordBank</Label>
       <div className="grid grid-cols-3 gap-2">
-        {["easy", "medium", "hard"].map((level) => (
+        {categories.map((cat) => (
           <Button
-            key={level}
-            variant={difficulty === level ? "default" : "outline"}
+            key={cat}
+            variant={category === cat ? "default" : "outline"}
             className="capitalize"
-            onClick={() => onDifficultyChange(level)}
+            onClick={() => onCategoryChange(cat)}
           >
-            {level}
+            {cat}
           </Button>
         ))}
       </div>

@@ -17,7 +17,7 @@ import { Student } from "@/types/match";
 const PreMatchSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [difficulty, setDifficulty] = useState("medium");
+  const [selectedCategory, setSelectedCategory] = useState("Basic");
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
   const [students, setStudents] = useState<Student[]>([]);
@@ -69,24 +69,15 @@ const PreMatchSetup = () => {
       return;
     }
 
-    const filteredWords = wordData.filter((word: WordData) => {
-      switch (difficulty) {
-        case "easy":
-          return word.frequency === "high";
-        case "medium":
-          return true;
-        case "hard":
-          return word.frequency === "low";
-        default:
-          return true;
-      }
-    });
+    const filteredWords = wordData.filter((word: WordData) => 
+      word.category === selectedCategory
+    );
 
     const totalQuestionsNeeded = selectedStudents.length * questionsPerStudent;
     if (filteredWords.length < totalQuestionsNeeded) {
       toast({
         title: "Not enough words",
-        description: `Need ${totalQuestionsNeeded} words but only have ${filteredWords.length} available. Please reduce questions per student or change difficulty.`,
+        description: `Need ${totalQuestionsNeeded} words but only have ${filteredWords.length} available in the selected category. Please reduce questions per student or change category.`,
         variant: "destructive",
       });
       return;
@@ -96,7 +87,7 @@ const PreMatchSetup = () => {
       state: { 
         students: selectedStudents,
         wordList: filteredWords,
-        difficulty,
+        category: selectedCategory,
         questionsPerStudent 
       } 
     });
@@ -141,8 +132,8 @@ const PreMatchSetup = () => {
             </div>
 
             <DifficultySelect
-              difficulty={difficulty}
-              onDifficultyChange={setDifficulty}
+              category={selectedCategory}
+              onCategoryChange={setSelectedCategory}
             />
           </div>
         </Card>
