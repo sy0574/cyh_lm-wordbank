@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { wordData } from "@/data/wordData";
+import { wordData, WordData } from "@/data/wordData";
 
 interface Student {
   id: string;
@@ -136,10 +136,24 @@ const PreMatchSetup = () => {
       return;
     }
 
+    // Create a filtered list of words based on difficulty
+    const filteredWords = wordData.filter((word: WordData) => {
+      switch (difficulty) {
+        case "easy":
+          return word.frequency === "high";
+        case "medium":
+          return true; // Include all words
+        case "hard":
+          return word.frequency === "low";
+        default:
+          return true;
+      }
+    });
+
     navigate("/match-arena", { 
       state: { 
         students: validStudents,
-        wordList: wordData, 
+        wordList: filteredWords,
         difficulty 
       } 
     });
