@@ -80,17 +80,16 @@ export const useStudentSelection = (
     return selectedStudent;
   };
 
-  const updateStudentAnswerCount = (studentId: string) => {
-    setStudentAnswerCounts(prev => {
-      const newCount = (prev[studentId] || 0) + 1;
-      if (newCount <= questionsPerStudent) {
-        return {
-          ...prev,
-          [studentId]: newCount
-        };
-      }
-      return prev;
-    });
+  const updateStudentAnswerCount = (studentId: string): number => {
+    let newCount = (studentAnswerCounts[studentId] || 0) + 1;
+    if (newCount <= questionsPerStudent) {
+      setStudentAnswerCounts(prev => ({
+        ...prev,
+        [studentId]: newCount
+      }));
+      return newCount;
+    }
+    return studentAnswerCounts[studentId] || 0;
   };
 
   return {

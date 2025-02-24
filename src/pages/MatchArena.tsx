@@ -52,11 +52,10 @@ const MatchArena = () => {
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
     
-    // 更新学生答题计数
-    const updatedCount = updateStudentAnswerCount(currentStudent.id);
-    const totalAnswers = Object.values({...studentAnswerCounts, [currentStudent.id]: updatedCount})
-      .reduce((sum, count) => sum + count, 0);
-    const shouldEnd = totalAnswers >= students.length * questionsPerStudent;
+    // Update student answer count and check if match should end
+    const currentAnswerCount = updateStudentAnswerCount(currentStudent.id);
+    const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
+    const shouldEnd = totalAnswers + 1 >= students.length * questionsPerStudent;
     
     if (shouldEnd) {
       setIsMatchComplete(true);
