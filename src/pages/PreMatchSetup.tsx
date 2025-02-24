@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { wordData, WordData } from "@/data/wordData";
+import { studentData, getUniqueClasses, getStudentsByClass } from "@/data/studentData";
 
 interface Student {
   id: string;
@@ -34,21 +35,41 @@ const PreMatchSetup = () => {
   const [groups, setGroups] = useState<Group[]>([{
     id: '1',
     name: 'Group 1',
-    students: [{ id: '1', name: '', avatar: '' }]
+    students: []
   }]);
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedGroup, setSelectedGroup] = useState<string>('1');
+  const [selectedClass, setSelectedClass] = useState<string>("");
+  const classes = getUniqueClasses();
 
   const generateAvatar = (seed: string) => {
     return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}`;
   };
+
+  useEffect(() => {
+    if (selectedClass) {
+      const classStudents = getStudentsByClass(selectedClass).map(s => ({
+        id: s.id,
+        name: s.name,
+        avatar: generateAvatar(s.name)
+      }));
+
+      setGroups(prevGroups => 
+        prevGroups.map(group => 
+          group.id === selectedGroup 
+            ? { ...group, students: classStudents }
+            : group
+        )
+      );
+    }
+  }, [selectedClass, selectedGroup]);
 
   const addGroup = () => {
     const newGroupId = String(groups.length + 1);
     setGroups([...groups, {
       id: newGroupId,
       name: `Group ${newGroupId}`,
-      students: [{ id: '1', name: '', avatar: '' }]
+      students: []
     }]);
   };
 
@@ -68,60 +89,6 @@ const PreMatchSetup = () => {
     }
   };
 
-  const addStudent = (groupId: string) => {
-    setGroups(groups.map(group => {
-      if (group.id === groupId) {
-        const newStudentId = String(group.students.length + 1);
-        return {
-          ...group,
-          students: [...group.students, { id: newStudentId, name: '', avatar: '' }]
-        };
-      }
-      return group;
-    }));
-  };
-
-  const removeStudent = (groupId: string, studentId: string) => {
-    setGroups(groups.map(group => {
-      if (group.id === groupId) {
-        if (group.students.length === 1) {
-          toast({
-            title: "Cannot remove last student",
-            description: "Each group must have at least one student.",
-            variant: "destructive",
-          });
-          return group;
-        }
-        return {
-          ...group,
-          students: group.students.filter(s => s.id !== studentId)
-        };
-      }
-      return group;
-    }));
-  };
-
-  const updateStudentName = (groupId: string, studentId: string, name: string) => {
-    setGroups(groups.map(group => {
-      if (group.id === groupId) {
-        return {
-          ...group,
-          students: group.students.map(student => {
-            if (student.id === studentId) {
-              return {
-                ...student,
-                name,
-                avatar: generateAvatar(name)
-              };
-            }
-            return student;
-          })
-        };
-      }
-      return group;
-    }));
-  };
-
   const handleStart = () => {
     const currentGroup = groups.find(g => g.id === selectedGroup);
     if (!currentGroup) return;
@@ -130,7 +97,7 @@ const PreMatchSetup = () => {
     if (validStudents.length === 0) {
       toast({
         title: "Invalid setup",
-        description: "Please add at least one student.",
+        description: "Please select a class and ensure there are students.",
         variant: "destructive",
       });
       return;
@@ -174,6 +141,22 @@ const PreMatchSetup = () => {
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label>Class Selection</Label>
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((className) => (
+                    <SelectItem key={className} value={className}>
+                      {className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Group Selection</Label>
                 <Button
@@ -207,23 +190,13 @@ const PreMatchSetup = () => {
                       <Users className="w-4 h-4 mr-2" />
                       {group.name}
                     </h3>
-                    <div className="space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addStudent(group.id)}
-                      >
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Add Student
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeGroup(group.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeGroup(group.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
 
                   <div className="space-y-2">
@@ -236,21 +209,16 @@ const PreMatchSetup = () => {
                             className="w-8 h-8 rounded-full"
                           />
                         )}
-                        <Input
-                          placeholder={`Student ${student.id}`}
-                          value={student.name}
-                          onChange={(e) => updateStudentName(group.id, student.id, e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeStudent(group.id, student.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="flex-1 px-3 py-2 bg-muted rounded-md">
+                          {student.name}
+                        </div>
                       </div>
                     ))}
+                    {group.students.length === 0 && (
+                      <p className="text-muted-foreground text-sm">
+                        Please select a class to load students
+                      </p>
+                    )}
                   </div>
                 </div>
               )
@@ -278,7 +246,7 @@ const PreMatchSetup = () => {
           className="w-full"
           size="lg"
           onClick={handleStart}
-          disabled={!groups.find(g => g.id === selectedGroup)?.students.some(s => s.name.trim())}
+          disabled={!selectedClass || groups[0].students.length === 0}
         >
           <Book className="w-4 h-4 mr-2" />
           Start Assessment
