@@ -1,12 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { WordData } from "@/data/wordData";
 import Podium from "@/components/Podium";
 import MatchProgress from "@/components/MatchProgress";
 import WordDisplay from "@/components/WordDisplay";
 import AnswerButtons from "@/components/AnswerButtons";
-import { MatchResult } from "@/types/match";
 import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
@@ -19,9 +17,10 @@ const MatchArena = () => {
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
-  const [results, setResults] = useState<MatchResult[]>([]);
+  const [results, setResults] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
+  const [showResultsPopup, setShowResultsPopup] = useState(false);
 
   const { timeLeft, potentialPoints } = useMatchTimer(wordStartTime);
   const { score, showPoints, setShowPoints, earnedPoints, updateScores, getRankings } = 
@@ -59,7 +58,8 @@ const MatchArena = () => {
       student: currentStudent,
       responseTime,
       pointsEarned,
-      answerNumber: results.filter(r => r.student.id === currentStudent.id).length + 1
+      answerNumber: results.filter(r => r.student.id === currentStudent.id).length + 1,
+      answeredAt: new Date()
     };
 
     setResults(prev => [...prev, newResult]);
@@ -71,6 +71,7 @@ const MatchArena = () => {
       const nextStudent = selectNextStudent();
       
       if (nextStudent === null) {
+        setShowResultsPopup(true);
         return;
       }
       
@@ -80,6 +81,18 @@ const MatchArena = () => {
         setWordStartTime(Date.now());
       }
     }, 1500);
+  };
+
+  const handleViewResults = () => {
+    navigate("/match-summary", {
+      state: {
+        students,
+        score,
+        total: results.length,
+        results,
+        difficulty
+      }
+    });
   };
 
   if (!wordList || !currentStudent) {
@@ -115,6 +128,8 @@ const MatchArena = () => {
         <AnswerButtons
           onAnswer={handleAnswer}
           disabled={showFeedback}
+          showResultsPopup={showResultsPopup}
+          onViewResults={handleViewResults}
         />
       </div>
     </div>
