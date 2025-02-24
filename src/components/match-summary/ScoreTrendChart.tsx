@@ -12,15 +12,13 @@ interface ScoreTrendChartProps {
 }
 
 const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
-  const [key, setKey] = useState(0); // Add key to force remount
+  const [key, setKey] = useState(0);
   const [animationPercent, setAnimationPercent] = useState<number>(0);
 
   useEffect(() => {
-    // Reset chart by updating key
     setKey(prev => prev + 1);
     setAnimationPercent(0);
     
-    // Start animation after component remounts
     const timer = setTimeout(() => {
       setAnimationPercent(100);
     }, 100);
@@ -43,7 +41,7 @@ const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
+          <XAxis dataKey="answerNumber" />
           <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
           <Tooltip />
           <Legend />
