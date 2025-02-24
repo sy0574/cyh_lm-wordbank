@@ -12,18 +12,18 @@ interface ScoreTrendChartProps {
 }
 
 const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
+  const [key, setKey] = useState(0); // Add key to force remount
   const [animationPercent, setAnimationPercent] = useState<number>(0);
 
   useEffect(() => {
-    // Reset animation immediately when data changes
+    // Reset chart by updating key
+    setKey(prev => prev + 1);
     setAnimationPercent(0);
     
-    // Start animation after a brief delay to ensure reset is complete
+    // Start animation after component remounts
     const timer = setTimeout(() => {
-      requestAnimationFrame(() => {
-        setAnimationPercent(100);
-      });
-    }, 50);
+      setAnimationPercent(100);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [data]);
@@ -33,6 +33,7 @@ const ScoreTrendChart = ({ data }: ScoreTrendChartProps) => {
       <h3 className="text-sm font-medium mb-2">Score Trend</h3>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
+          key={key}
           data={data}
           margin={{
             top: 5,
