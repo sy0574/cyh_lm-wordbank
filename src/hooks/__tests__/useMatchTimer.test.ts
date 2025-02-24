@@ -1,4 +1,5 @@
 
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useMatchTimer } from '../useMatchTimer';
 import { MAX_TIME, BASE_POINTS, MAX_BONUS } from '@/utils/scoring';

@@ -1,4 +1,5 @@
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useStudentSelection } from '../useStudentSelection';
 import { Student, MatchResult } from '@/types/match';
