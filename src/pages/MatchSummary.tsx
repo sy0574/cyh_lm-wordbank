@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,18 +19,10 @@ interface StudentStats {
     word: string;
     correct: boolean;
     responseTime: number;
+    pointsEarned: number;
+    answerNumber: number;
   }>;
 }
-
-const generateHistoricalData = (studentName: string) => {
-  const numberOfAssessments = 5; // Including the current one
-  return Array.from({ length: numberOfAssessments }, (_, i) => ({
-    assessmentNumber: i + 1,
-    accuracy: Math.round(Math.random() * 30 + 70), // Random accuracy between 70-100%
-    responseTime: Math.round(Math.random() * 1000 + 500), // Random response time between 500-1500ms
-    student: studentName
-  }));
-};
 
 const MatchSummary = () => {
   const location = useLocation();
@@ -71,7 +64,9 @@ const MatchSummary = () => {
       words: studentResults.map((r: any) => ({
         word: r.word,
         correct: r.correct,
-        responseTime: r.responseTime
+        responseTime: r.responseTime,
+        pointsEarned: r.pointsEarned,
+        answerNumber: r.answerNumber
       }))
     };
   });
@@ -91,15 +86,17 @@ const MatchSummary = () => {
     return "More practice needed";
   };
 
-  const selectedStatsData = studentStats.find(stats => stats.name === selectedStudentId);
+  const selectedStatsData = studentStats.find(stats => 
+    stats.name === students.find(s => s.id === selectedStudentId)?.name
+  );
+  
   const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
-  const historicalData = generateHistoricalData(selectedStudentId);
-  historicalData.push({
-    assessmentNumber: historicalData.length + 1,
-    accuracy: percentage,
-    responseTime: selectedStatsData?.averageResponseTime || 0,
-    student: selectedStudentId
-  });
+
+  const scoreData = selectedStatsData?.words.map(result => ({
+    answerNumber: result.answerNumber,
+    score: result.pointsEarned,
+    responseTime: result.responseTime
+  })) || [];
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
@@ -162,10 +159,10 @@ const MatchSummary = () => {
 
             <div className="space-y-4">
               <div className="h-64 w-full">
-                <h3 className="text-sm font-medium mb-2">Accuracy Trend</h3>
+                <h3 className="text-sm font-medium mb-2">Score Trend</h3>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={historicalData}
+                    data={scoreData}
                     margin={{
                       top: 5,
                       right: 30,
@@ -174,14 +171,14 @@ const MatchSummary = () => {
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
-                    <YAxis label={{ value: 'Accuracy (%)', angle: -90, position: 'insideLeft' }} />
+                    <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
+                    <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="accuracy"
-                      name="Accuracy"
+                      dataKey="score"
+                      name="Score"
                       stroke="#4f46e5"
                       activeDot={{ r: 8 }}
                     />
@@ -193,7 +190,7 @@ const MatchSummary = () => {
                 <h3 className="text-sm font-medium mb-2">Response Time Trend</h3>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={historicalData}
+                    data={scoreData}
                     margin={{
                       top: 5,
                       right: 30,
@@ -202,7 +199,7 @@ const MatchSummary = () => {
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="assessmentNumber" label={{ value: 'Assessment Number', position: 'bottom' }} />
+                    <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
                     <YAxis label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
@@ -231,6 +228,7 @@ const MatchSummary = () => {
                     <span>{result.word}</span>
                     <div className="flex items-center gap-4">
                       <span>{result.responseTime}ms</span>
+                      <span>{result.pointsEarned} points</span>
                       <span>{result.correct ? "Correct" : "Incorrect"}</span>
                     </div>
                   </div>
@@ -263,3 +261,4 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
+

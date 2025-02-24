@@ -58,7 +58,8 @@ const MatchArena = () => {
       correct,
       student: currentStudent,
       responseTime,
-      pointsEarned
+      pointsEarned,
+      answerNumber: results.filter(r => r.student.id === currentStudent.id).length + 1
     };
 
     setResults(prev => [...prev, newResult]);
@@ -67,14 +68,12 @@ const MatchArena = () => {
       setShowFeedback(false);
       setShowPoints(false);
       
-      // 选择下一个学生，如果返回 null 说明游戏应该结束
       const nextStudent = selectNextStudent();
       
       if (nextStudent === null) {
-        return; // 让 selectNextStudent 处理导航
+        return;
       }
       
-      // 只有在有下一个学生的情况下才更新单词索引
       const nextWordIndex = currentWordIndex + 1;
       if (nextWordIndex < wordList.length) {
         setCurrentWordIndex(nextWordIndex);
