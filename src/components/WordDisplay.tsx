@@ -39,36 +39,32 @@ const WordDisplay = ({
   const timerCircumference = 2 * Math.PI * 32;
   const timerStrokeDashoffset = timerCircumference * (1 - timeProgress / 100);
   
-  // Card border progress dimensions
-  const cardBorderLength = 2400; // Approximate perimeter of the card
-  const borderStrokeDashoffset = cardBorderLength * (1 - questionProgress / 100);
+  // Top border progress dimensions
+  const topBorderLength = 600; // Approximate width of the card
+  const borderStrokeDashoffset = topBorderLength * (1 - questionProgress / 100);
 
   return (
     <div className="relative">
       <div className="relative">
-        {/* Progress border */}
+        {/* Progress border - top only */}
         <svg className="absolute inset-0 w-full h-full -m-[1px]">
-          <rect
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-            fill="none"
+          <line
+            x1="0"
+            y1="1"
+            x2="100%"
+            y2="1"
             stroke="hsl(var(--muted))"
             strokeWidth="2"
-            rx="8"
           />
-          <rect
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-            fill="none"
+          <line
+            x1="0"
+            y1="1"
+            x2="100%"
+            y2="1"
             stroke="hsl(var(--primary))"
             strokeWidth="2"
-            rx="8"
             style={{
-              strokeDasharray: cardBorderLength,
+              strokeDasharray: topBorderLength,
               strokeDashoffset: borderStrokeDashoffset,
               transition: 'stroke-dashoffset 0.3s ease',
             }}
