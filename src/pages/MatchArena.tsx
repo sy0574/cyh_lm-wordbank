@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
@@ -20,12 +19,11 @@ const MatchArena = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
   const [showResultsPopup, setShowResultsPopup] = useState(false);
-  const [isMatchComplete, setIsMatchComplete] = useState(false);
 
   const { timeLeft, potentialPoints } = useMatchTimer(wordStartTime);
   const { score, showPoints, setShowPoints, earnedPoints, updateScores, getRankings } = 
     useMatchScoring(students);
-  const { currentStudent, selectNextStudent, updateStudentAnswerCount, studentAnswerCounts } = 
+  const { currentStudent, selectNextStudent, updateStudentAnswerCount } = 
     useStudentSelection(students, questionsPerStudent, score, results, difficulty);
 
   useEffect(() => {
@@ -37,29 +35,15 @@ const MatchArena = () => {
     selectNextStudent();
   }, [wordList, students, navigate]);
 
-  const shouldEndMatch = () => {
-    const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
-    const requiredAnswers = students.length * questionsPerStudent;
-    return totalAnswers >= requiredAnswers;
-  };
-
   const handleAnswer = async (isCorrect: boolean) => {
-    if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
+    if (!currentStudent || !wordList[currentWordIndex]) return;
 
     const responseTime = Date.now() - wordStartTime;
     setShowFeedback(true);
     const correct = isCorrect;
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
-    
-    // Update student answer count and check if match should end
-    const currentAnswerCount = updateStudentAnswerCount(currentStudent.id);
-    const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
-    const shouldEnd = totalAnswers + 1 >= students.length * questionsPerStudent;
-    
-    if (shouldEnd) {
-      setIsMatchComplete(true);
-    }
+    updateStudentAnswerCount(currentStudent.id);
     
     setFeedback({
       correct,
@@ -81,11 +65,6 @@ const MatchArena = () => {
     setTimeout(() => {
       setShowFeedback(false);
       setShowPoints(false);
-      
-      if (shouldEnd) {
-        setShowResultsPopup(true);
-        return;
-      }
       
       const nextStudent = selectNextStudent();
       
@@ -118,9 +97,6 @@ const MatchArena = () => {
   }
 
   const rankings = getRankings();
-  const totalAnsweredQuestions = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
-  const totalExpectedQuestions = students.length * questionsPerStudent;
-  const displayProgress = isMatchComplete ? totalExpectedQuestions : totalAnsweredQuestions;
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
@@ -138,14 +114,14 @@ const MatchArena = () => {
             earnedPoints={earnedPoints}
             showFeedback={showFeedback}
             feedback={feedback}
-            currentWordIndex={displayProgress}
-            totalQuestions={totalExpectedQuestions}
+            currentWordIndex={currentWordIndex}
+            totalQuestions={questionsPerStudent * (students?.length || 0)}
           />
         )}
 
         <AnswerButtons
           onAnswer={handleAnswer}
-          disabled={showFeedback || isMatchComplete}
+          disabled={showFeedback}
           showResultsPopup={showResultsPopup}
           onViewResults={handleViewResults}
         />
