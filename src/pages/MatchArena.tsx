@@ -8,8 +8,9 @@ import { Check, X, Timer } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { WordData } from "@/data/wordData";
 import { motion, AnimatePresence } from "framer-motion";
+import Podium from "@/components/Podium";
 
-interface Student {
+export interface Student {
   id: string;
   name: string;
   avatar: string;
@@ -41,6 +42,9 @@ const MatchArena = () => {
   }>>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
+  const [studentScores, setStudentScores] = useState<Record<string, number>>(() =>
+    Object.fromEntries(students.map((student: Student) => [student.id, 0]))
+  );
 
   useEffect(() => {
     if (!wordList || wordList.length === 0 || !students || students.length === 0) {
@@ -92,6 +96,16 @@ const MatchArena = () => {
     announceStudent(nextStudent);
   };
 
+  const getRankings = () => {
+    return Object.entries(studentScores)
+      .map(([id, score]) => ({
+        student: students.find((s: Student) => s.id === id)!,
+        score,
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  };
+
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex]) return;
 
@@ -107,6 +121,12 @@ const MatchArena = () => {
       setScore(score + pointsEarned);
       setEarnedPoints(pointsEarned);
       setShowPoints(true);
+
+      // Update student scores
+      setStudentScores(prev => ({
+        ...prev,
+        [currentStudent.id]: prev[currentStudent.id] + pointsEarned
+      }));
     }
     
     setFeedback({
@@ -153,6 +173,8 @@ const MatchArena = () => {
     return null;
   }
 
+  const rankings = getRankings();
+
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
       <div className="space-y-8 slide-up">
@@ -167,6 +189,8 @@ const MatchArena = () => {
           </div>
           <Progress value={((currentWordIndex + 1) / wordList.length) * 100} />
         </div>
+
+        <Podium rankings={rankings} />
 
         <Card className="p-8">
           <div className="text-center space-y-6 relative">
