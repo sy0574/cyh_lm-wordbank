@@ -5,20 +5,29 @@ interface MatchProgressProps {
   currentWordIndex: number;
   totalWords: number;
   score: number;
+  questionsPerStudent: number;
+  totalStudents: number;
 }
 
-const MatchProgress = ({ currentWordIndex, totalWords, score }: MatchProgressProps) => {
+const MatchProgress = ({ 
+  currentWordIndex, 
+  score,
+  questionsPerStudent,
+  totalStudents
+}: MatchProgressProps) => {
+  const totalQuestions = questionsPerStudent * totalStudents;
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium text-muted-foreground">
-          Word {currentWordIndex + 1} of {totalWords}
+          Word {currentWordIndex + 1} of {totalQuestions}
         </span>
         <span className="text-sm font-medium">
-          Score: {score}/{totalWords * 200}
+          Score: {score}/{totalQuestions * 200}
         </span>
       </div>
-      <Progress value={((currentWordIndex + 1) / totalWords) * 100} />
+      <Progress value={((currentWordIndex + 1) / totalQuestions) * 100} />
     </div>
   );
 };

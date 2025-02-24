@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
@@ -178,8 +179,9 @@ const MatchArena = () => {
       <div className="space-y-8 slide-up">
         <MatchProgress 
           currentWordIndex={currentWordIndex}
-          totalWords={wordList.length}
           score={score}
+          questionsPerStudent={questionsPerStudent}
+          totalStudents={students?.length || 0}
         />
 
         <Podium rankings={rankings} />
