@@ -12,6 +12,7 @@ export interface MatchResult {
   responseTime: number;
   pointsEarned: number;
   answerNumber: number;
+  answeredAt?: Date;  // Added this field as optional
 }
 
 export interface StudentScore {
@@ -34,3 +35,4 @@ export interface StudentStats {
     answeredAt?: Date;
   }>;
 }
+
