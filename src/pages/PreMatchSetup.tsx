@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { wordData } from "@/data/wordData";
 
 interface Student {
   id: string;
@@ -35,7 +36,6 @@ const PreMatchSetup = () => {
     name: 'Group 1',
     students: [{ id: '1', name: '', avatar: '' }]
   }]);
-  const [wordList, setWordList] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedGroup, setSelectedGroup] = useState<string>('1');
 
@@ -127,10 +127,10 @@ const PreMatchSetup = () => {
     if (!currentGroup) return;
     
     const validStudents = currentGroup.students.filter(s => s.name.trim());
-    if (validStudents.length === 0 || wordList.length === 0) {
+    if (validStudents.length === 0) {
       toast({
         title: "Invalid setup",
-        description: "Please add at least one student and some words.",
+        description: "Please add at least one student.",
         variant: "destructive",
       });
       return;
@@ -139,7 +139,7 @@ const PreMatchSetup = () => {
     navigate("/match-arena", { 
       state: { 
         students: validStudents,
-        wordList, 
+        wordList: wordData, 
         difficulty 
       } 
     });
@@ -243,18 +243,6 @@ const PreMatchSetup = () => {
             ))}
 
             <div className="space-y-2">
-              <Label htmlFor="wordList">Word List</Label>
-              <Input
-                id="wordList"
-                placeholder="Enter words separated by commas"
-                onChange={(e) => setWordList(e.target.value.split(",").map(word => word.trim()))}
-              />
-              <p className="text-sm text-muted-foreground">
-                Enter words separated by commas (e.g., apple, banana, cherry)
-              </p>
-            </div>
-
-            <div className="space-y-2">
               <Label>Difficulty Level</Label>
               <div className="grid grid-cols-3 gap-2">
                 {["easy", "medium", "hard"].map((level) => (
@@ -276,7 +264,7 @@ const PreMatchSetup = () => {
           className="w-full"
           size="lg"
           onClick={handleStart}
-          disabled={!groups.find(g => g.id === selectedGroup)?.students.some(s => s.name.trim()) || wordList.length === 0}
+          disabled={!groups.find(g => g.id === selectedGroup)?.students.some(s => s.name.trim())}
         >
           <Book className="w-4 h-4 mr-2" />
           Start Assessment
