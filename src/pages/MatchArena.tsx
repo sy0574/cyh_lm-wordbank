@@ -4,8 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, User } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { WordData } from "@/data/wordData";
 
 interface Student {
   id: string;
@@ -33,10 +34,11 @@ const MatchArena = () => {
 
   useEffect(() => {
     if (!wordList || wordList.length === 0 || !students || students.length === 0) {
+      console.log("Missing data:", { wordList, students });
       navigate("/");
-    } else {
-      selectNextStudent();
+      return;
     }
+    selectNextStudent();
   }, [wordList, students, navigate]);
 
   const announceStudent = async (student: Student) => {
@@ -63,7 +65,7 @@ const MatchArena = () => {
   };
 
   const handleAnswer = async (isCorrect: boolean) => {
-    if (!currentStudent) return;
+    if (!currentStudent || !wordList[currentWordIndex]) return;
 
     const responseTime = Date.now() - wordStartTime;
     setShowFeedback(true);
@@ -77,7 +79,7 @@ const MatchArena = () => {
     });
 
     setResults([...results, { 
-      word: wordList[currentWordIndex], 
+      word: wordList[currentWordIndex].word,
       correct,
       student: currentStudent,
       responseTime
@@ -95,7 +97,7 @@ const MatchArena = () => {
             score,
             total: wordList.length,
             results: [...results, { 
-              word: wordList[currentWordIndex], 
+              word: wordList[currentWordIndex].word,
               correct,
               student: currentStudent,
               responseTime
@@ -107,7 +109,10 @@ const MatchArena = () => {
     }, 1500);
   };
 
-  if (!wordList || !currentStudent) return null;
+  if (!wordList || !currentStudent) {
+    console.log("Rendering null due to missing data");
+    return null;
+  }
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
@@ -135,7 +140,7 @@ const MatchArena = () => {
               <span className="font-medium text-lg">{currentStudent.name}</span>
             </div>
             <h2 className="text-5xl font-bold tracking-tight">
-              {wordList[currentWordIndex]}
+              {wordList[currentWordIndex].word}
             </h2>
             {showFeedback && (
               <div className={`text-xl font-semibold ${feedback.correct ? 'text-accent' : 'text-destructive'}`}>
@@ -170,3 +175,4 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
+
