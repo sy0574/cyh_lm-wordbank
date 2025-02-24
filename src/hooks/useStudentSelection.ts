@@ -33,7 +33,14 @@ export const useStudentSelection = (
   };
 
   const shouldEndMatch = () => {
-    return Object.values(studentAnswerCounts).every(count => count >= questionsPerStudent);
+    // 首先检查是否有答题记录
+    if (Object.keys(studentAnswerCounts).length === 0) {
+      return false;
+    }
+    // 检查每个学生是否都完成了指定数量的问题
+    return students.every(student => 
+      (studentAnswerCounts[student.id] || 0) >= questionsPerStudent
+    );
   };
 
   const navigateToSummary = () => {
@@ -51,7 +58,7 @@ export const useStudentSelection = (
   const selectNextStudent = () => {
     if (shouldEndMatch()) {
       navigateToSummary();
-      return;
+      return null;
     }
 
     let nextStudentIndex = currentStudentIndex;
@@ -77,6 +84,7 @@ export const useStudentSelection = (
     }
 
     navigateToSummary();
+    return null;
   };
 
   const updateStudentAnswerCount = (studentId: string) => {
@@ -93,4 +101,3 @@ export const useStudentSelection = (
     studentAnswerCounts
   };
 };
-
