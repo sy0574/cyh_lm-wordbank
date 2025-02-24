@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
@@ -105,7 +104,6 @@ const MatchArena = () => {
       <div className="space-y-8 slide-up">
         <MatchProgress 
           currentWordIndex={currentWordIndex}
-          score={score}
           questionsPerStudent={questionsPerStudent}
           totalStudents={students?.length || 0}
         />

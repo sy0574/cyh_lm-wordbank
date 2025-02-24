@@ -3,30 +3,26 @@ import { Progress } from "@/components/ui/progress";
 
 interface MatchProgressProps {
   currentWordIndex: number;
-  score: number;
   questionsPerStudent: number;
   totalStudents: number;
 }
 
 const MatchProgress = ({ 
-  currentWordIndex, 
-  score,
+  currentWordIndex,
   questionsPerStudent,
   totalStudents
 }: MatchProgressProps) => {
   const totalQuestions = questionsPerStudent * totalStudents;
   
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-muted-foreground">
-          Word {currentWordIndex + 1} of {totalQuestions}
-        </span>
-        <span className="text-sm font-medium">
-          Score: {score}/{totalQuestions * 200}
-        </span>
-      </div>
-      <Progress value={((currentWordIndex + 1) / totalQuestions) * 100} />
+    <div className="flex items-center gap-3">
+      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+        Word {currentWordIndex + 1} of {totalQuestions}
+      </span>
+      <Progress 
+        value={((currentWordIndex + 1) / totalQuestions) * 100} 
+        className="h-2" 
+      />
     </div>
   );
 };
