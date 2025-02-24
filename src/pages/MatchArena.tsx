@@ -27,6 +27,7 @@ const MatchArena = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
   const [studentAnswerCounts, setStudentAnswerCounts] = useState<Record<string, number>>({});
+  const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [studentScores, setStudentScores] = useState<Record<string, number>>(() =>
     Object.fromEntries(students?.map((student: Student) => [student.id, 0]) || [])
   );
@@ -71,14 +72,10 @@ const MatchArena = () => {
   };
 
   const shouldEndMatch = () => {
-    // 检查是否所有学生都已完成指定数量的问题
-    return students.every(student => 
-      (studentAnswerCounts[student.id] || 0) >= questionsPerStudent
-    );
+    return Object.values(studentAnswerCounts).every(count => count >= questionsPerStudent);
   };
 
   const selectNextStudent = () => {
-    // 首先检查是否应该结束比赛
     if (shouldEndMatch()) {
       navigate("/match-summary", {
         state: {
@@ -92,31 +89,43 @@ const MatchArena = () => {
       return;
     }
 
-    // 筛选出还没有答完指定问题数量的学生
-    const availableStudents = students.filter(student => 
-      (studentAnswerCounts[student.id] || 0) < questionsPerStudent
-    );
+    let nextStudentIndex = currentStudentIndex;
+    let attempts = 0;
 
-    if (availableStudents.length === 0) {
-      // 这是一个额外的安全检查
-      navigate("/match-summary", {
-        state: {
-          students,
-          score,
-          total: results.length,
-          results,
-          difficulty
-        }
-      });
-      return;
+    // 使用循环来找到下一个还没有完成指定问题数量的学生
+    while (attempts < students.length) {
+      // 如果已经遍历完所有学生，从头开始
+      if (nextStudentIndex >= students.length) {
+        nextStudentIndex = 0;
+      }
+
+      const nextStudent = students[nextStudentIndex];
+      const studentQuestionCount = studentAnswerCounts[nextStudent.id] || 0;
+
+      if (studentQuestionCount < questionsPerStudent) {
+        setCurrentStudent(nextStudent);
+        setCurrentStudentIndex(nextStudentIndex + 1);
+        setWordStartTime(Date.now());
+        setTimeLeft(MAX_TIME);
+        setPotentialPoints(200);
+        announceStudent(nextStudent);
+        return;
+      }
+
+      nextStudentIndex++;
+      attempts++;
     }
 
-    const nextStudent = availableStudents[Math.floor(Math.random() * availableStudents.length)];
-    setCurrentStudent(nextStudent);
-    setWordStartTime(Date.now());
-    setTimeLeft(MAX_TIME);
-    setPotentialPoints(200);
-    announceStudent(nextStudent);
+    // 如果所有学生都完成了，进入总结页面
+    navigate("/match-summary", {
+      state: {
+        students,
+        score,
+        total: results.length,
+        results,
+        difficulty
+      }
+    });
   };
 
   const getRankings = () => {
@@ -233,4 +242,3 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
-
