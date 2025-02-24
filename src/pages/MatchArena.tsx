@@ -38,9 +38,9 @@ const MatchArena = () => {
   }, [wordList, students, navigate]);
 
   const shouldEndMatch = () => {
-    return students.every(student => 
-      (studentAnswerCounts[student.id] || 0) >= questionsPerStudent
-    );
+    const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
+    const requiredAnswers = students.length * questionsPerStudent;
+    return totalAnswers >= requiredAnswers;
   };
 
   const handleAnswer = async (isCorrect: boolean) => {
@@ -51,7 +51,16 @@ const MatchArena = () => {
     const correct = isCorrect;
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
-    updateStudentAnswerCount(currentStudent.id);
+    
+    // 更新学生答题计数
+    const updatedCount = updateStudentAnswerCount(currentStudent.id);
+    const totalAnswers = Object.values({...studentAnswerCounts, [currentStudent.id]: updatedCount})
+      .reduce((sum, count) => sum + count, 0);
+    const shouldEnd = totalAnswers >= students.length * questionsPerStudent;
+    
+    if (shouldEnd) {
+      setIsMatchComplete(true);
+    }
     
     setFeedback({
       correct,
@@ -74,8 +83,7 @@ const MatchArena = () => {
       setShowFeedback(false);
       setShowPoints(false);
       
-      if (shouldEndMatch()) {
-        setIsMatchComplete(true);
+      if (shouldEnd) {
         setShowResultsPopup(true);
         return;
       }
@@ -113,6 +121,7 @@ const MatchArena = () => {
   const rankings = getRankings();
   const totalAnsweredQuestions = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
   const totalExpectedQuestions = students.length * questionsPerStudent;
+  const displayProgress = isMatchComplete ? totalExpectedQuestions : totalAnsweredQuestions;
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
@@ -130,7 +139,7 @@ const MatchArena = () => {
             earnedPoints={earnedPoints}
             showFeedback={showFeedback}
             feedback={feedback}
-            currentWordIndex={isMatchComplete ? totalExpectedQuestions : totalAnsweredQuestions}
+            currentWordIndex={displayProgress}
             totalQuestions={totalExpectedQuestions}
           />
         )}
