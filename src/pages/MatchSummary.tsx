@@ -11,10 +11,11 @@ import ClassSelector from "@/components/match-summary/ClassSelector";
 import Rankings from "@/components/match-summary/Rankings";
 import MatchHeader from "@/components/match-summary/MatchHeader";
 import MatchActions from "@/components/match-summary/MatchActions";
-import TimeFilter, { TIME_FILTERS, TimeFilter as TimeFilterType } from "@/components/match-summary/TimeFilter";
+import TimeFilter from "@/components/match-summary/TimeFilter";
 import { getStudentsByClass } from "@/data/studentData";
 import { generateReportHtml } from "@/utils/reportGenerator";
-import { StudentStats } from "@/types/match";
+import { useStudentStats } from "@/hooks/useStudentStats";
+import { useRankings } from "@/hooks/useRankings";
 
 const getFeedback = (percentage: number) => {
   if (percentage >= 90) return "Outstanding performance!";
@@ -29,7 +30,9 @@ const MatchSummary = () => {
   const { students = [], results = [], difficulty = "medium" } = location.state || {};
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [timeFilter, setTimeFilter] = useState<TimeFilterType>(TIME_FILTERS.ALL);
+
+  const { studentStats, timeFilter, setTimeFilter } = useStudentStats(students, results);
+  const { getRankings } = useRankings(studentStats, students);
 
   useEffect(() => {
     if (!location.state) {
@@ -58,51 +61,6 @@ const MatchSummary = () => {
     return null;
   }
 
-  const filterResultsByTime = (results: any[]) => {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    return results.filter(result => {
-      const resultDate = new Date(result.answeredAt || Date.now());
-      switch (timeFilter) {
-        case TIME_FILTERS.TODAY:
-          return resultDate >= startOfDay;
-        case TIME_FILTERS.THIS_WEEK:
-          return resultDate >= startOfWeek;
-        case TIME_FILTERS.THIS_MONTH:
-          return resultDate >= startOfMonth;
-        default:
-          return true;
-      }
-    });
-  };
-
-  const studentStats: StudentStats[] = students.map((student: any) => {
-    const studentResults = filterResultsByTime(
-      results.filter((r: any) => r.student.id === student.id)
-    );
-    const correct = studentResults.filter((r: any) => r.correct).length;
-    const totalResponseTime = studentResults.reduce((acc: number, curr: any) => acc + curr.responseTime, 0);
-    
-    return {
-      name: student.name,
-      avatar: student.avatar,
-      correct,
-      total: studentResults.length,
-      averageResponseTime: studentResults.length > 0 ? Math.round(totalResponseTime / studentResults.length) : 0,
-      words: studentResults.map((r: any) => ({
-        word: r.word,
-        correct: r.correct,
-        responseTime: r.responseTime,
-        pointsEarned: r.pointsEarned,
-        answerNumber: r.answerNumber,
-        answeredAt: r.answeredAt || new Date()
-      }))
-    };
-  });
-
   const selectedStatsData = studentStats.find(stats => 
     stats.name === students.find(s => s.id === selectedStudentId)?.name
   );
@@ -115,21 +73,6 @@ const MatchSummary = () => {
     responseTime: result.responseTime,
     answeredAt: result.answeredAt
   })) || [];
-
-  const getRankings = () => {
-    return studentStats
-      .map(stats => ({
-        student: students.find(s => s.name === stats.name)!,
-        score: stats.words.reduce((acc, word) => acc + word.pointsEarned, 0),
-        averageResponseTime: stats.averageResponseTime
-      }))
-      .sort((a, b) => {
-        if (b.score !== a.score) {
-          return b.score - a.score;
-        }
-        return a.averageResponseTime - b.averageResponseTime;
-      });
-  };
 
   const handleSaveReport = () => {
     const printWindow = window.open('', '_blank');
