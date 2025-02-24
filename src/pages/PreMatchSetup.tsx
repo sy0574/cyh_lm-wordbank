@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { wordData, WordData } from "@/data/wordData";
 import { getUniqueClasses, getStudentsByClass } from "@/data/studentData";
 import { DifficultySelect } from "./PreMatchSetup/DifficultySelect";
 import { ClassSelect } from "./PreMatchSetup/ClassSelect";
+import { StudentList } from "./PreMatchSetup/StudentList";
+import { Student } from "@/types/match";
 
 const PreMatchSetup = () => {
   const navigate = useNavigate();
@@ -18,11 +20,28 @@ const PreMatchSetup = () => {
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const classes = getUniqueClasses();
 
   const generateAvatar = (seed: string) => {
     return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}`;
   };
+
+  useEffect(() => {
+    if (selectedClass) {
+      const classStudents = getStudentsByClass(selectedClass).map(s => ({
+        id: s.id,
+        name: s.name,
+        avatar: generateAvatar(s.name)
+      }));
+      setStudents(classStudents);
+      setSelectedStudents(classStudents);
+    } else {
+      setStudents([]);
+      setSelectedStudents([]);
+    }
+  }, [selectedClass]);
 
   const handleQuestionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
@@ -41,16 +60,10 @@ const PreMatchSetup = () => {
       return;
     }
 
-    const students = getStudentsByClass(selectedClass).map(s => ({
-      id: s.id,
-      name: s.name,
-      avatar: generateAvatar(s.name)
-    }));
-
-    if (students.length === 0) {
+    if (selectedStudents.length === 0) {
       toast({
         title: "Invalid setup",
-        description: "Please select a class with students.",
+        description: "Please select at least one student to continue.",
         variant: "destructive",
       });
       return;
@@ -69,7 +82,7 @@ const PreMatchSetup = () => {
       }
     });
 
-    const totalQuestionsNeeded = students.length * questionsPerStudent;
+    const totalQuestionsNeeded = selectedStudents.length * questionsPerStudent;
     if (filteredWords.length < totalQuestionsNeeded) {
       toast({
         title: "Not enough words",
@@ -81,7 +94,7 @@ const PreMatchSetup = () => {
 
     navigate("/match-arena", { 
       state: { 
-        students,
+        students: selectedStudents,
         wordList: filteredWords,
         difficulty,
         questionsPerStudent 
@@ -109,6 +122,13 @@ const PreMatchSetup = () => {
               onClassChange={setSelectedClass}
             />
 
+            {students.length > 0 && (
+              <StudentList
+                availableStudents={students}
+                onStudentsChange={setSelectedStudents}
+              />
+            )}
+
             <div className="space-y-2">
               <Label>Questions per Student</Label>
               <Input
@@ -131,7 +151,7 @@ const PreMatchSetup = () => {
           className="w-full"
           size="lg"
           onClick={handleStart}
-          disabled={!selectedClass}
+          disabled={!selectedClass || selectedStudents.length === 0}
         >
           <Book className="w-4 h-4 mr-2" />
           Start Assessment
