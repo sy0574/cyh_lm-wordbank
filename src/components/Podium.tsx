@@ -1,5 +1,5 @@
 
-import { Student } from "@/pages/MatchArena";
+import { Student } from "@/types/match";
 
 interface PodiumProps {
   rankings: Array<{
