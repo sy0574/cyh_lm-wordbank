@@ -8,6 +8,7 @@ import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
 import { MAX_TIME } from "@/utils/scoring";
+import { toast } from "@/components/ui/use-toast";
 
 const MatchArena = () => {
   const location = useLocation();
@@ -102,15 +103,41 @@ const MatchArena = () => {
   };
 
   const handleViewResults = () => {
-    navigate("/match-summary", {
-      state: {
-        students,
-        score,
-        total: results.length,
-        results,
-        difficulty
+    try {
+      const newWindow = window.open("/match-summary", "_blank");
+      
+      if (!newWindow) {
+        // Pop-up was blocked
+        toast({
+          title: "Pop-up Blocked",
+          description: "Please allow pop-ups for this site to open the preview in a new tab. You can also click 'View Results' again to try in the same tab.",
+          variant: "destructive",
+        });
+        
+        // Fallback: navigate in same tab
+        navigate("/match-summary", {
+          state: {
+            students,
+            score,
+            total: results.length,
+            results,
+            difficulty
+          }
+        });
       }
-    });
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to same-tab navigation
+      navigate("/match-summary", {
+        state: {
+          students,
+          score,
+          total: results.length,
+          results,
+          difficulty
+        }
+      });
+    }
   };
 
   if (!wordList) {
