@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
-import MatchProgress from "@/components/MatchProgress";
 import WordDisplay from "@/components/WordDisplay";
 import AnswerButtons from "@/components/AnswerButtons";
 import { useMatchTimer } from "@/hooks/useMatchTimer";
@@ -102,12 +101,6 @@ const MatchArena = () => {
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
       <div className="space-y-8 slide-up">
-        <MatchProgress 
-          currentWordIndex={currentWordIndex}
-          questionsPerStudent={questionsPerStudent}
-          totalStudents={students?.length || 0}
-        />
-
         <Podium rankings={rankings} />
 
         {!showResultsPopup && currentStudent && (
@@ -121,6 +114,8 @@ const MatchArena = () => {
             earnedPoints={earnedPoints}
             showFeedback={showFeedback}
             feedback={feedback}
+            currentWordIndex={currentWordIndex}
+            totalQuestions={questionsPerStudent * (students?.length || 0)}
           />
         )}
 
