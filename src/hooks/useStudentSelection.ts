@@ -33,11 +33,11 @@ export const useStudentSelection = (
   };
 
   const shouldEndMatch = () => {
-    // 首先检查是否有答题记录
+    // 检查是否所有学生都完成了指定数量的问题
     if (Object.keys(studentAnswerCounts).length === 0) {
       return false;
     }
-    // 检查每个学生是否都完成了指定数量的问题
+    
     return students.every(student => 
       (studentAnswerCounts[student.id] || 0) >= questionsPerStudent
     );
@@ -56,6 +56,7 @@ export const useStudentSelection = (
   };
 
   const selectNextStudent = () => {
+    // 先检查是否应该结束比赛
     if (shouldEndMatch()) {
       navigateToSummary();
       return null;
@@ -83,6 +84,7 @@ export const useStudentSelection = (
       attempts++;
     }
 
+    // 如果所有学生都完成了问题，导航到总结页面
     navigateToSummary();
     return null;
   };
