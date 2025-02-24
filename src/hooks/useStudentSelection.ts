@@ -36,12 +36,12 @@ export const useStudentSelection = (
   };
 
   const shouldEndMatch = () => {
-    // Check if any student has answered their questions
+    // Ensure we have some answers recorded
     if (Object.keys(studentAnswerCounts).length === 0) {
       return false;
     }
 
-    // Check if all students have completed their required questions
+    // Check if all students have exactly completed their required questions
     return students.every(student => {
       const answeredQuestions = studentAnswerCounts[student.id] || 0;
       return answeredQuestions >= questionsPerStudent;
@@ -49,8 +49,9 @@ export const useStudentSelection = (
   };
 
   const selectNextStudent = () => {
-    // Check if all students have completed their questions
+    // First check if the match should end
     if (shouldEndMatch()) {
+      setCurrentStudent(null);
       return null;
     }
 
@@ -69,9 +70,6 @@ export const useStudentSelection = (
 
       if (studentQuestionCount < questionsPerStudent) {
         selectedStudent = candidateStudent;
-        setCurrentStudent(selectedStudent);
-        setCurrentStudentIndex(nextStudentIndex + 1);
-        announceStudent(selectedStudent);
         break;
       }
 
@@ -79,19 +77,32 @@ export const useStudentSelection = (
       attempts++;
     }
 
-    // If no eligible student is found, return null to end the match
+    // If no eligible student is found, end the match
     if (!selectedStudent) {
+      setCurrentStudent(null);
       return null;
     }
+
+    // Update the state and announce the student
+    setCurrentStudent(selectedStudent);
+    setCurrentStudentIndex(nextStudentIndex + 1);
+    announceStudent(selectedStudent);
 
     return selectedStudent;
   };
 
   const updateStudentAnswerCount = (studentId: string) => {
-    setStudentAnswerCounts(prev => ({
-      ...prev,
-      [studentId]: (prev[studentId] || 0) + 1
-    }));
+    setStudentAnswerCounts(prev => {
+      const newCount = (prev[studentId] || 0) + 1;
+      // Only update if we haven't exceeded the questions per student
+      if (newCount <= questionsPerStudent) {
+        return {
+          ...prev,
+          [studentId]: newCount
+        };
+      }
+      return prev;
+    });
   };
 
   return {
@@ -101,4 +112,3 @@ export const useStudentSelection = (
     studentAnswerCounts
   };
 };
-

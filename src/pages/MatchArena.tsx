@@ -75,9 +75,8 @@ const MatchArena = () => {
         return;
       }
       
-      const nextWordIndex = currentWordIndex + 1;
-      if (nextWordIndex < wordList.length) {
-        setCurrentWordIndex(nextWordIndex);
+      if (currentWordIndex + 1 < wordList.length) {
+        setCurrentWordIndex(prev => prev + 1);
         setWordStartTime(Date.now());
       }
     }, 1500);
@@ -95,7 +94,7 @@ const MatchArena = () => {
     });
   };
 
-  if (!wordList || !currentStudent) {
+  if (!wordList) {
     return null;
   }
 
@@ -113,17 +112,19 @@ const MatchArena = () => {
 
         <Podium rankings={rankings} />
 
-        <WordDisplay
-          currentStudent={currentStudent}
-          word={wordList[currentWordIndex].word}
-          timeLeft={timeLeft}
-          maxTime={MAX_TIME}
-          potentialPoints={potentialPoints}
-          showPoints={showPoints}
-          earnedPoints={earnedPoints}
-          showFeedback={showFeedback}
-          feedback={feedback}
-        />
+        {!showResultsPopup && currentStudent && (
+          <WordDisplay
+            currentStudent={currentStudent}
+            word={wordList[currentWordIndex].word}
+            timeLeft={timeLeft}
+            maxTime={MAX_TIME}
+            potentialPoints={potentialPoints}
+            showPoints={showPoints}
+            earnedPoints={earnedPoints}
+            showFeedback={showFeedback}
+            feedback={feedback}
+          />
+        )}
 
         <AnswerButtons
           onAnswer={handleAnswer}
@@ -137,4 +138,3 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
-
