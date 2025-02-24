@@ -2,7 +2,6 @@
 import { Student } from "@/types/match";
 import { Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface WordDisplayProps {
@@ -31,6 +30,10 @@ const WordDisplay = ({
   showFeedback,
   feedback,
 }: WordDisplayProps) => {
+  const progress = (timeLeft / maxTime) * 100;
+  const circumference = 2 * Math.PI * 32; // Circle radius is 32
+  const strokeDashoffset = circumference * (1 - progress / 100);
+
   return (
     <Card className="p-8">
       <div className="text-center space-y-6 relative">
@@ -41,11 +44,32 @@ const WordDisplay = ({
           </span>
         </div>
         <div className="flex flex-col items-center justify-center gap-2">
-          <img
-            src={currentStudent.avatar}
-            alt={`${currentStudent.name}'s avatar`}
-            className="w-16 h-16 rounded-full"
-          />
+          <div className="relative w-16 h-16">
+            <svg className="absolute -top-1 -left-1 w-[72px] h-[72px] -rotate-90">
+              <circle
+                cx="36"
+                cy="36"
+                r="32"
+                className="fill-none stroke-muted stroke-[3]"
+              />
+              <circle
+                cx="36"
+                cy="36"
+                r="32"
+                className="fill-none stroke-primary stroke-[3]"
+                style={{
+                  strokeDasharray: circumference,
+                  strokeDashoffset: strokeDashoffset,
+                  transition: 'stroke-dashoffset 0.1s linear',
+                }}
+              />
+            </svg>
+            <img
+              src={currentStudent.avatar}
+              alt={`${currentStudent.name}'s avatar`}
+              className="w-16 h-16 rounded-full relative z-10"
+            />
+          </div>
           <span className="font-medium text-lg">{currentStudent.name}</span>
         </div>
         <h2 className="text-5xl font-bold tracking-tight">{word}</h2>
@@ -73,7 +97,6 @@ const WordDisplay = ({
             </motion.div>
           )}
         </AnimatePresence>
-        <Progress value={(timeLeft / maxTime) * 100} className="w-full mt-4" />
       </div>
     </Card>
   );
