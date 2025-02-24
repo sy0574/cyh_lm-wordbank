@@ -3,7 +3,6 @@ import { Progress } from "@/components/ui/progress";
 
 interface MatchProgressProps {
   currentWordIndex: number;
-  totalWords: number;
   score: number;
   questionsPerStudent: number;
   totalStudents: number;
