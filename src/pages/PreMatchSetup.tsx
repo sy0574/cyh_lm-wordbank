@@ -109,6 +109,17 @@ const PreMatchSetup = () => {
       }
     });
 
+    // Ensure we have enough words for all students
+    const totalQuestionsNeeded = validStudents.length * questionsPerStudent;
+    if (filteredWords.length < totalQuestionsNeeded) {
+      toast({
+        title: "Not enough words",
+        description: `Need ${totalQuestionsNeeded} words but only have ${filteredWords.length} available. Please reduce questions per student or change difficulty.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     navigate("/match-arena", { 
       state: { 
         students: validStudents,

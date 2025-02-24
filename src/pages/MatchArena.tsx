@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
@@ -13,7 +12,7 @@ import { MAX_TIME, BASE_POINTS, MAX_BONUS, calculatePoints } from "@/utils/scori
 const MatchArena = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { students, wordList, difficulty } = location.state || {};
+  const { students, wordList, difficulty, questionsPerStudent } = location.state || {};
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
@@ -26,6 +25,7 @@ const MatchArena = () => {
   const [results, setResults] = useState<MatchResult[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState({ correct: false, message: "" });
+  const [studentAnswerCounts, setStudentAnswerCounts] = useState<Record<string, number>>({});
   const [studentScores, setStudentScores] = useState<Record<string, number>>(() =>
     Object.fromEntries(students?.map((student: Student) => [student.id, 0]) || [])
   );
@@ -70,7 +70,24 @@ const MatchArena = () => {
   };
 
   const selectNextStudent = () => {
-    const nextStudent = students[Math.floor(Math.random() * students.length)];
+    const availableStudents = students.filter(student => 
+      (studentAnswerCounts[student.id] || 0) < questionsPerStudent
+    );
+
+    if (availableStudents.length === 0) {
+      navigate("/match-summary", {
+        state: {
+          students,
+          score,
+          total: results.length,
+          results,
+          difficulty
+        }
+      });
+      return;
+    }
+
+    const nextStudent = availableStudents[Math.floor(Math.random() * availableStudents.length)];
     setCurrentStudent(nextStudent);
     setWordStartTime(Date.now());
     setTimeLeft(MAX_TIME);
@@ -112,33 +129,36 @@ const MatchArena = () => {
       message: correct ? `+${pointsEarned} points!` : "Keep practicing!"
     });
 
-    setResults([...results, { 
+    setStudentAnswerCounts(prev => ({
+      ...prev,
+      [currentStudent.id]: (prev[currentStudent.id] || 0) + 1
+    }));
+
+    const newResult = { 
       word: wordList[currentWordIndex].word,
       correct,
       student: currentStudent,
       responseTime,
       pointsEarned
-    }]);
+    };
+
+    setResults([...results, newResult]);
 
     setTimeout(() => {
       setShowFeedback(false);
       setShowPoints(false);
-      if (currentWordIndex < wordList.length - 1) {
-        setCurrentWordIndex(currentWordIndex + 1);
+      
+      const nextWordIndex = currentWordIndex + 1;
+      if (nextWordIndex < wordList.length) {
+        setCurrentWordIndex(nextWordIndex);
         selectNextStudent();
       } else {
         navigate("/match-summary", {
           state: {
             students,
             score,
-            total: wordList.length,
-            results: [...results, { 
-              word: wordList[currentWordIndex].word,
-              correct,
-              student: currentStudent,
-              responseTime,
-              pointsEarned
-            }],
+            total: results.length + 1,
+            results: [...results, newResult],
             difficulty
           }
         });
