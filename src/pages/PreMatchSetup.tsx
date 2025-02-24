@@ -17,7 +17,7 @@ import { Student } from "@/types/match";
 const PreMatchSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedCategory, setSelectedCategory] = useState("Basic");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["Basic"]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
   const [students, setStudents] = useState<Student[]>([]);
@@ -50,6 +50,16 @@ const PreMatchSetup = () => {
     }
   };
 
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(cat => cat !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  };
+
   const handleStart = () => {
     if (!selectedClass) {
       toast({
@@ -69,15 +79,24 @@ const PreMatchSetup = () => {
       return;
     }
 
+    if (selectedCategories.length === 0) {
+      toast({
+        title: "Invalid setup",
+        description: "Please select at least one word category to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const filteredWords = wordData.filter((word: WordData) => 
-      word.category === selectedCategory
+      selectedCategories.includes(word.category)
     );
 
     const totalQuestionsNeeded = selectedStudents.length * questionsPerStudent;
     if (filteredWords.length < totalQuestionsNeeded) {
       toast({
         title: "Not enough words",
-        description: `Need ${totalQuestionsNeeded} words but only have ${filteredWords.length} available in the selected category. Please reduce questions per student or change category.`,
+        description: `Need ${totalQuestionsNeeded} words but only have ${filteredWords.length} available in the selected categories. Please reduce questions per student or select more categories.`,
         variant: "destructive",
       });
       return;
@@ -87,7 +106,7 @@ const PreMatchSetup = () => {
       state: { 
         students: selectedStudents,
         wordList: filteredWords,
-        category: selectedCategory,
+        categories: selectedCategories,
         questionsPerStudent 
       } 
     });
@@ -132,8 +151,8 @@ const PreMatchSetup = () => {
             </div>
 
             <DifficultySelect
-              category={selectedCategory}
-              onCategoryChange={setSelectedCategory}
+              selectedCategories={selectedCategories}
+              onCategoryChange={handleCategoryChange}
             />
           </div>
         </Card>
@@ -142,7 +161,7 @@ const PreMatchSetup = () => {
           className="w-full"
           size="lg"
           onClick={handleStart}
-          disabled={!selectedClass || selectedStudents.length === 0}
+          disabled={!selectedClass || selectedStudents.length === 0 || selectedCategories.length === 0}
         >
           <Book className="w-4 h-4 mr-2" />
           Start Assessment

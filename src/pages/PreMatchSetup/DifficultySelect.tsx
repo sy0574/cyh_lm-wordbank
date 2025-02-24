@@ -4,12 +4,12 @@ import { Label } from "@/components/ui/label";
 import { wordData } from "@/data/wordData";
 
 interface CategorySelectProps {
-  category: string;
+  selectedCategories: string[];
   onCategoryChange: (category: string) => void;
 }
 
 export const DifficultySelect = ({
-  category,
+  selectedCategories,
   onCategoryChange
 }: CategorySelectProps) => {
   // Get unique categories and their word counts from wordData
@@ -22,12 +22,12 @@ export const DifficultySelect = ({
 
   return (
     <div className="space-y-2">
-      <Label>WordBank</Label>
+      <Label>WordBank (Select multiple)</Label>
       <div className="grid grid-cols-3 gap-2">
         {categories.map((cat) => (
           <Button
             key={cat}
-            variant={category === cat ? "default" : "outline"}
+            variant={selectedCategories.includes(cat) ? "default" : "outline"}
             className="capitalize flex flex-col gap-1 h-auto py-2"
             onClick={() => onCategoryChange(cat)}
           >
@@ -41,4 +41,3 @@ export const DifficultySelect = ({
     </div>
   );
 };
-
