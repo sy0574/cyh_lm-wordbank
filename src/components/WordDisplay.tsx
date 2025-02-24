@@ -77,14 +77,12 @@ const WordDisplay = ({
               +{earnedPoints}
             </motion.div>
           )}
-          {showFeedback && (
+          {showFeedback && feedback.correct === false && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className={`text-xl font-semibold ${
-                feedback.correct ? "text-accent" : "text-destructive"
-              }`}
+              className="text-xl font-semibold text-destructive"
             >
               {feedback.message}
             </motion.div>
@@ -96,4 +94,3 @@ const WordDisplay = ({
 };
 
 export default WordDisplay;
-
