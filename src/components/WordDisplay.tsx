@@ -1,6 +1,5 @@
 
 import { Student } from "@/types/match";
-import { Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,7 +23,6 @@ const WordDisplay = ({
   word,
   timeLeft,
   maxTime,
-  potentialPoints,
   showPoints,
   earnedPoints,
   showFeedback,
@@ -37,12 +35,6 @@ const WordDisplay = ({
   return (
     <Card className="p-8">
       <div className="text-center space-y-6 relative">
-        <div className="absolute top-0 right-0 p-4 flex items-center gap-2">
-          <Timer className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">
-            Potential Points: {potentialPoints}
-          </span>
-        </div>
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="relative w-16 h-16">
             <svg className="absolute -top-1 -left-1 w-[72px] h-[72px] -rotate-90">
@@ -76,10 +68,11 @@ const WordDisplay = ({
         <AnimatePresence>
           {showPoints && earnedPoints > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-accent"
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.5 }}
+              className="text-4xl font-bold text-accent"
             >
               +{earnedPoints}
             </motion.div>
@@ -103,3 +96,4 @@ const WordDisplay = ({
 };
 
 export default WordDisplay;
+
