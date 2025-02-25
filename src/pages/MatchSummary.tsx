@@ -17,7 +17,7 @@ const MatchSummary = () => {
   const [students, setStudents] = useState([]);
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
-  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>("all");
 
   useEffect(() => {
     console.log("Location state:", location.state);
@@ -38,7 +38,7 @@ const MatchSummary = () => {
 
     if (location.state.students.length > 0 && !selectedStudentId) {
       setSelectedStudentId(location.state.students[0].id);
-      setSelectedClass(location.state.students[0].class || "");
+      setSelectedClass("all");
     }
   }, [location.state, navigate, selectedStudentId]);
 
@@ -74,7 +74,7 @@ const MatchSummary = () => {
 
     const filteredStats = studentStats.filter(stat => {
       const student = students.find(s => s.name === stat.name);
-      return selectedClass === "" || student?.class === selectedClass;
+      return selectedClass === "all" || student?.class === selectedClass;
     });
 
     const htmlContent = generateReportHtml(filteredStats, selectedClass, timeFilter);

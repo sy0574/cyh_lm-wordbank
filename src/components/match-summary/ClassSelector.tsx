@@ -31,7 +31,7 @@ const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => 
           <SelectValue placeholder="选择班级" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Classes</SelectItem>
+          <SelectItem value="all">All Classes</SelectItem>
           {classes.map((className) => (
             <SelectItem key={className} value={className}>
               {className}
@@ -44,3 +44,4 @@ const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => 
 };
 
 export default ClassSelector;
+
