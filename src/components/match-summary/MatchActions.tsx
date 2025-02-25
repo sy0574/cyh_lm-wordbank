@@ -1,7 +1,7 @@
 
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Book, RotateCcw } from "lucide-react";
+import { RefreshCcw, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface MatchActionsProps {
   onSaveReport: () => void;
@@ -11,13 +11,20 @@ const MatchActions = ({ onSaveReport }: MatchActionsProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Button variant="outline" onClick={() => navigate("/setup")}>
-        <RotateCcw className="w-4 h-4 mr-2" />
+    <div className="flex justify-between w-full gap-4">
+      <Button 
+        variant="outline" 
+        onClick={() => navigate("/")}
+        className="flex items-center gap-2"
+      >
+        <RefreshCcw className="h-4 w-4" />
         New Assessment
       </Button>
-      <Button onClick={onSaveReport}>
-        <Book className="w-4 h-4 mr-2" />
+      <Button 
+        onClick={onSaveReport}
+        className="flex items-center gap-2"
+      >
+        <Save className="h-4 w-4" />
         Save Report
       </Button>
     </div>
@@ -25,4 +32,3 @@ const MatchActions = ({ onSaveReport }: MatchActionsProps) => {
 };
 
 export default MatchActions;
-

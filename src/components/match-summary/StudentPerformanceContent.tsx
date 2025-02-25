@@ -2,11 +2,13 @@
 import { useState } from "react";
 import StudentSelector from "./StudentSelector";
 import ClassSelector from "./ClassSelector";
-import TimeFilter, { TimeFilter as TimeFilterType, TIME_FILTERS } from "./TimeFilter";
+import TimeFilter, { TimeFilter as TimeFilterType } from "./TimeFilter";
 import PerformanceMetrics from "./PerformanceMetrics";
 import PerformanceCharts from "./PerformanceCharts";
 import PerformanceDetails from "./PerformanceDetails";
 import { Student, StudentStats } from "@/types/match";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface StudentPerformanceContentProps {
   selectedClass: string;
@@ -36,6 +38,7 @@ const StudentPerformanceContent = ({
   selectedStatsData,
   difficulty,
 }: StudentPerformanceContentProps) => {
+  const [activeTab, setActiveTab] = useState("current");
   const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
 
   const scoreData = selectedStatsData?.words.map(result => ({
@@ -60,23 +63,46 @@ const StudentPerformanceContent = ({
         />
       </div>
 
-      <TimeFilter value={timeFilter} onChange={setTimeFilter} />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="current">Current Assessment</TabsTrigger>
+          <TabsTrigger value="history">Historical Data</TabsTrigger>
+        </TabsList>
+        <TabsContent value="current">
+          <Card>
+            <CardContent className="space-y-6 pt-6">
+              <PerformanceMetrics
+                percentage={percentage}
+                averageResponseTime={selectedStatsData?.averageResponseTime || 0}
+              />
+              <PerformanceCharts data={scoreData} />
+              <PerformanceDetails words={selectedStatsData?.words || []} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="history">
+          <Card>
+            <CardContent className="space-y-6 pt-6">
+              <TimeFilter value={timeFilter} onChange={setTimeFilter} />
+              {selectedStatsData && (
+                <>
+                  <PerformanceMetrics
+                    percentage={percentage}
+                    averageResponseTime={selectedStatsData.averageResponseTime}
+                  />
+                  <PerformanceCharts data={scoreData} />
+                  <PerformanceDetails words={selectedStatsData.words} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {selectedStatsData && (
-        <>
-          <PerformanceMetrics
-            percentage={percentage}
-            averageResponseTime={selectedStatsData.averageResponseTime}
-          />
-
-          <PerformanceCharts data={scoreData} />
-
-          <PerformanceDetails words={selectedStatsData.words} />
-
-          <div className="text-accent font-medium text-center">
-            {getFeedback(percentage)}
-          </div>
-        </>
+        <div className="text-accent font-medium text-center">
+          {getFeedback(percentage)}
+        </div>
       )}
     </div>
   );

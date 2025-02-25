@@ -11,25 +11,20 @@ interface MatchLayoutProps {
 
 const MatchLayout = ({ header, mainContent, sideContent, actions }: MatchLayoutProps) => {
   return (
-    <div className="container max-w-[90rem] mx-auto py-12 px-4">
-      <div className="space-y-8 slide-up">
+    <div className="container max-w-[90rem] mx-auto py-8 px-4">
+      <div className="space-y-6">
         {header}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="p-6">
-              {mainContent}
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1">
-            <Card className="p-6">
-              {sideContent}
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 p-6 space-y-6">
+            {mainContent}
+          </Card>
+          <Card className="lg:col-span-1 p-6">
+            {sideContent}
+          </Card>
         </div>
-
-        {actions}
+        <div className="flex justify-between items-center">
+          {actions}
+        </div>
       </div>
     </div>
   );
