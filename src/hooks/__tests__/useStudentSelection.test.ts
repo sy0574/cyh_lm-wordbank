@@ -11,8 +11,8 @@ const mockNavigate = vi.fn();
 vi.spyOn(router, 'useNavigate').mockImplementation(() => mockNavigate);
 
 const mockStudents: Student[] = [
-  { id: '1', name: 'Student 1', avatar: 'avatar1' },
-  { id: '2', name: 'Student 2', avatar: 'avatar2' }
+  { id: '1', name: 'Student 1', avatar: 'avatar1', class: 'Class A' },
+  { id: '2', name: 'Student 2', avatar: 'avatar2', class: 'Class A' }
 ];
 
 const mockResults: MatchResult[] = [];

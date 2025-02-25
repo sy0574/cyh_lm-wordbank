@@ -6,8 +6,8 @@ import { Student } from '@/types/match';
 import { MAX_TIME } from '@/utils/scoring';
 
 const mockStudents: Student[] = [
-  { id: '1', name: 'Student 1', avatar: 'avatar1' },
-  { id: '2', name: 'Student 2', avatar: 'avatar2' }
+  { id: '1', name: 'Student 1', avatar: 'avatar1', class: 'Class A' },
+  { id: '2', name: 'Student 2', avatar: 'avatar2', class: 'Class A' }
 ];
 
 describe('useMatchScoring', () => {
