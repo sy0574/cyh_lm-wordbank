@@ -129,6 +129,30 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_seed: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_seed?: string | null
+          created_at?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_seed?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       student_word_mastery: {
         Row: {
           average_response_time: number | null
