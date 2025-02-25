@@ -16,7 +16,7 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     return results.filter(result => {
-      const resultDate = new Date(result.answeredAt);
+      const resultDate = new Date(result.answeredAt || new Date());
       switch (timeFilter) {
         case TIME_FILTERS.TODAY:
           return resultDate >= startOfDay;
@@ -43,62 +43,70 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
         throw error;
       }
 
-      console.log(`Found ${matchHistoryData?.length || 0} match history records for students:`, studentIds);
+      console.log(`Found ${matchHistoryData?.length || 0} match history records`);
 
       // Process the match history data
       const formattedResults: MatchResult[] = (matchHistoryData || []).map(result => {
         const student = students.find(s => s.id === result.student_id);
+        if (!student) {
+          console.log('Student not found for ID:', result.student_id);
+          return null;
+        }
         return {
           word: result.word,
           correct: result.correct,
-          student: student || {
-            id: result.student_id,
-            name: 'Unknown',
-            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`,
-            class: ''
-          },
+          student: student,
           responseTime: result.response_time,
           pointsEarned: result.points_earned,
           answerNumber: result.answer_number,
-          answeredAt: new Date(result.answered_at)
+          answeredAt: result.answered_at ? new Date(result.answered_at) : new Date()
         };
-      }).filter(result => result.student.id); // Filter out results with invalid student IDs
+      }).filter((result): result is MatchResult => result !== null);
 
       const filteredResults = filterResultsByTime(formattedResults);
       console.log('Time-filtered results:', filteredResults);
 
-      // Create stats for each student, even if they have no results
-      return students
-        .filter(student => studentIds.includes(student.id))
-        .map(student => {
-          const studentResults = filteredResults.filter(r => r.student.id === student.id);
-          const correct = studentResults.filter(r => r.correct).length;
-          const totalResponseTime = studentResults.reduce(
-            (acc, curr) => acc + curr.responseTime,
-            0
-          );
+      // Create stats for each student in the filtered class
+      const relevantStudents = students.filter(student => 
+        selectedClass === "all" || student.class === selectedClass
+      );
 
-          return {
-            name: student.name,
-            avatar: student.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
-            correct,
-            total: studentResults.length,
-            averageResponseTime:
-              studentResults.length > 0
-                ? Math.round(totalResponseTime / studentResults.length)
-                : 0,
-            words: studentResults.map(r => ({
-              word: r.word,
-              correct: r.correct,
-              responseTime: r.responseTime,
-              pointsEarned: r.pointsEarned,
-              answerNumber: r.answerNumber,
-              answeredAt: r.answeredAt,
-            })),
-          };
-        });
+      console.log('Processing stats for students:', relevantStudents);
+
+      return relevantStudents.map(student => {
+        const studentResults = filteredResults.filter(r => r.student.id === student.id);
+        const correct = studentResults.filter(r => r.correct).length;
+        const totalResponseTime = studentResults.reduce(
+          (acc, curr) => acc + curr.responseTime,
+          0
+        );
+
+        return {
+          name: student.name,
+          avatar: student.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
+          correct,
+          total: studentResults.length,
+          averageResponseTime:
+            studentResults.length > 0
+              ? Math.round(totalResponseTime / studentResults.length)
+              : 0,
+          words: studentResults.map(r => ({
+            word: r.word,
+            correct: r.correct,
+            responseTime: r.responseTime,
+            pointsEarned: r.pointsEarned,
+            answerNumber: r.answerNumber,
+            answeredAt: r.answeredAt,
+          })),
+        };
+      });
     } catch (error) {
       console.error('Error processing match history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process match history data",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -107,17 +115,18 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     queryKey: ['matchHistory', selectedClass, timeFilter],
     queryFn: async () => {
       try {
-        // Get relevant student IDs based on selected class
-        const studentIds = students
-          .filter(s => selectedClass === "all" || s.class === selectedClass)
-          .map(s => s.id);
+        const relevantStudents = students.filter(s => 
+          selectedClass === "all" || s.class === selectedClass
+        );
 
-        if (studentIds.length === 0) {
-          console.log('No students found for class:', selectedClass);
+        if (relevantStudents.length === 0) {
+          console.log('No students found for selected class:', selectedClass);
           return [];
         }
 
-        console.log('Fetching match history for students in class:', selectedClass);
+        const studentIds = relevantStudents.map(s => s.id);
+        console.log('Fetching match history for students:', studentIds);
+        
         return await processMatchHistory(studentIds);
       } catch (error) {
         console.error('Error in student stats query:', error);
