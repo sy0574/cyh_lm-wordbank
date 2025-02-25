@@ -183,6 +183,27 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          class: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          class: string
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          class?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_seed: string
@@ -280,6 +301,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      words: {
+        Row: {
+          category: string
+          chinese_definition: string
+          created_at: string
+          examples: string[]
+          frequency: string
+          id: string
+          part_of_speech: string
+          pronunciation: string
+          textbook: string
+          word: string
+        }
+        Insert: {
+          category: string
+          chinese_definition: string
+          created_at?: string
+          examples: string[]
+          frequency: string
+          id: string
+          part_of_speech: string
+          pronunciation: string
+          textbook: string
+          word: string
+        }
+        Update: {
+          category?: string
+          chinese_definition?: string
+          created_at?: string
+          examples?: string[]
+          frequency?: string
+          id?: string
+          part_of_speech?: string
+          pronunciation?: string
+          textbook?: string
+          word?: string
+        }
+        Relationships: []
       }
     }
     Views: {

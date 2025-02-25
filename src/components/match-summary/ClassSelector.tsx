@@ -1,6 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getUniqueClasses } from "@/data/studentData";
+import { useQuery } from "@tanstack/react-query";
+import { getUniqueClasses } from "@/utils/databaseQueries";
 
 interface ClassSelectorProps {
   selectedClass: string;
@@ -8,7 +9,19 @@ interface ClassSelectorProps {
 }
 
 const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => {
-  const classes = getUniqueClasses();
+  const { data: classes = [], isLoading } = useQuery({
+    queryKey: ['classes'],
+    queryFn: getUniqueClasses
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium">班级</label>
+        <div className="w-[200px] h-10 bg-muted animate-pulse rounded-md" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
