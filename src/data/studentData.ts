@@ -7,11 +7,10 @@ export interface StudentData {
 
 export const studentData: StudentData[] = [
   { id: '1', name: 'Carl', class: 'test' },
-  { id: '2', name: 'Jenny', class: 'test1' },
+  { id: '2', name: 'Jenny', class: 'test' },
   { id: '3', name: 'Forrest', class: 'test' },
   { id: '4', name: 'Jack', class: 'test' },
   { id: '5', name: 'Rose', class: 'test' },
-  { id: '6', name: 'Jane', class: 'test' },
   { id: '7', name: 'Mickey', class: 'G9_Fri' },
   { id: '8', name: 'Jerry', class: 'G9_Fri' },
   { id: '9', name: 'Harry', class: 'G9_Fri' },
