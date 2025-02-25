@@ -30,93 +30,97 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     });
   };
 
-  const processMatchHistory = (data: any[]): StudentStats[] => {
-    // Get all students from the selected class or all students if 'all' is selected
-    const relevantStudents = students.filter(
-      student => selectedClass === "all" || student.class === selectedClass
-    );
+  const processMatchHistory = async (studentIds: string[]): Promise<StudentStats[]> => {
+    try {
+      // Fetch all match history for the selected student IDs
+      const { data: matchHistoryData, error } = await supabase
+        .from('match_history')
+        .select('*')
+        .in('student_id', studentIds);
 
-    console.log('Processing match history for students:', relevantStudents);
-    console.log('Selected class:', selectedClass);
-    console.log('Raw match history data:', data);
+      if (error) {
+        console.error('Error fetching match history:', error);
+        throw error;
+      }
 
-    const formattedResults: MatchResult[] = data.map(result => ({
-      word: result.word,
-      correct: result.correct,
-      student: relevantStudents.find(s => s.id === result.student_id) || {
-        id: result.student_id,
-        name: 'Unknown',
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`,
-        class: ''
-      },
-      responseTime: result.response_time,
-      pointsEarned: result.points_earned,
-      answerNumber: result.answer_number,
-      answeredAt: new Date(result.answered_at)
-    })).filter(result => result.student); // Only keep results where we found a matching student
+      console.log(`Found ${matchHistoryData?.length || 0} match history records for students:`, studentIds);
 
-    const filteredResults = filterResultsByTime(formattedResults);
-    console.log('Filtered results:', filteredResults);
+      // Process the match history data
+      const formattedResults: MatchResult[] = (matchHistoryData || []).map(result => {
+        const student = students.find(s => s.id === result.student_id);
+        return {
+          word: result.word,
+          correct: result.correct,
+          student: student || {
+            id: result.student_id,
+            name: 'Unknown',
+            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`,
+            class: ''
+          },
+          responseTime: result.response_time,
+          pointsEarned: result.points_earned,
+          answerNumber: result.answer_number,
+          answeredAt: new Date(result.answered_at)
+        };
+      }).filter(result => result.student.id); // Filter out results with invalid student IDs
 
-    return relevantStudents.map((student) => {
-      const studentResults = filteredResults.filter((r) => r.student.id === student.id);
-      const correct = studentResults.filter((r) => r.correct).length;
-      const totalResponseTime = studentResults.reduce(
-        (acc, curr) => acc + curr.responseTime,
-        0
-      );
+      const filteredResults = filterResultsByTime(formattedResults);
+      console.log('Time-filtered results:', filteredResults);
 
-      return {
-        name: student.name,
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
-        correct,
-        total: studentResults.length,
-        averageResponseTime:
-          studentResults.length > 0
-            ? Math.round(totalResponseTime / studentResults.length)
-            : 0,
-        words: studentResults.map((r) => ({
-          word: r.word,
-          correct: r.correct,
-          responseTime: r.responseTime,
-          pointsEarned: r.pointsEarned,
-          answerNumber: r.answerNumber,
-          answeredAt: r.answeredAt,
-        })),
-      };
-    });
+      // Create stats for each student, even if they have no results
+      return students
+        .filter(student => studentIds.includes(student.id))
+        .map(student => {
+          const studentResults = filteredResults.filter(r => r.student.id === student.id);
+          const correct = studentResults.filter(r => r.correct).length;
+          const totalResponseTime = studentResults.reduce(
+            (acc, curr) => acc + curr.responseTime,
+            0
+          );
+
+          return {
+            name: student.name,
+            avatar: student.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
+            correct,
+            total: studentResults.length,
+            averageResponseTime:
+              studentResults.length > 0
+                ? Math.round(totalResponseTime / studentResults.length)
+                : 0,
+            words: studentResults.map(r => ({
+              word: r.word,
+              correct: r.correct,
+              responseTime: r.responseTime,
+              pointsEarned: r.pointsEarned,
+              answerNumber: r.answerNumber,
+              answeredAt: r.answeredAt,
+            })),
+          };
+        });
+    } catch (error) {
+      console.error('Error processing match history:', error);
+      throw error;
+    }
   };
 
   const { data: studentStats = [], isLoading: loading } = useQuery({
     queryKey: ['matchHistory', selectedClass, timeFilter],
     queryFn: async () => {
       try {
-        // Get student IDs for the selected class
+        // Get relevant student IDs based on selected class
         const studentIds = students
           .filter(s => selectedClass === "all" || s.class === selectedClass)
           .map(s => s.id);
 
-        console.log('Fetching match history for student IDs:', studentIds);
-        
         if (studentIds.length === 0) {
           console.log('No students found for class:', selectedClass);
           return [];
         }
 
-        const { data, error } = await supabase
-          .from('match_history')
-          .select('*')
-          .in('student_id', studentIds);
-
-        if (error) {
-          console.error('Error fetching match history:', error);
-          throw error;
-        }
-
-        console.log(`Found ${data?.length || 0} match history records`);
-        return processMatchHistory(data || []);
+        console.log('Fetching match history for students in class:', selectedClass);
+        return await processMatchHistory(studentIds);
       } catch (error) {
-        console.error('Error fetching match history:', error);
+        console.error('Error in student stats query:', error);
         toast({
           title: "Error",
           description: "Failed to load match history data",
