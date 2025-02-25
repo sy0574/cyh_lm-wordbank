@@ -16,13 +16,9 @@ export const useMatchResults = () => {
     responseTime: number,
     pointsEarned: number,
     answerNumber: number,
-    difficulty: string
+    category: string
   ) => {
     try {
-      if (!difficulty) {
-        throw new Error('Difficulty level is required');
-      }
-
       const payload = {
         student_id: student.id,
         word,
@@ -30,7 +26,7 @@ export const useMatchResults = () => {
         response_time: Math.round(responseTime),
         points_earned: Math.round(pointsEarned),
         answer_number: answerNumber,
-        difficulty
+        category
       };
 
       console.log('Attempting to save match result with payload:', payload);

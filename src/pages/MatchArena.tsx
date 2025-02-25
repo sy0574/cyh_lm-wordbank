@@ -17,7 +17,7 @@ import { toast } from "@/components/ui/use-toast";
 const MatchArena = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { students, wordList, difficulty, questionsPerStudent, selectedLanguage } = location.state || {};
+  const { students, wordList, questionsPerStudent, selectedLanguage } = location.state || {};
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
@@ -26,7 +26,7 @@ const MatchArena = () => {
   const { score, showPoints, setShowPoints, earnedPoints, updateScores, getRankings } = 
     useMatchScoring(students);
   const { currentStudent, selectNextStudent, updateStudentAnswerCount, studentAnswerCounts } = 
-    useStudentSelection(students, questionsPerStudent, score, [], difficulty);
+    useStudentSelection(students, questionsPerStudent, score, [], null);
   const { showFeedback, setShowFeedback, feedback, setFeedback, getStreakFeedback } = 
     useMatchFeedback();
   const { results, showResultsPopup, setShowResultsPopup, isMatchComplete, setIsMatchComplete, saveResult } = 
@@ -39,20 +39,8 @@ const MatchArena = () => {
       return;
     }
 
-    // Also validate difficulty is present
-    if (!difficulty) {
-      console.error("Missing difficulty level");
-      toast({
-        title: "Error",
-        description: "Difficulty level is required to start the match",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
-    }
-
     selectNextStudent();
-  }, [wordList, students, difficulty, navigate, selectNextStudent]);
+  }, [wordList, students, navigate, selectNextStudent]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
@@ -85,7 +73,7 @@ const MatchArena = () => {
         responseTime,
         pointsEarned,
         results.filter(r => r.student.id === currentStudent.id).length + 1,
-        difficulty // Ensuring difficulty is passed here
+        currentStudent.category || 'Basic'
       );
 
       setTimeout(() => {
@@ -111,7 +99,6 @@ const MatchArena = () => {
       }, 2000);
     } catch (error) {
       console.error("Error in handleAnswer:", error);
-      // Error is already handled in saveResult, no need to show another toast
     }
   };
 
@@ -122,8 +109,7 @@ const MatchArena = () => {
           students,
           score,
           total: results.length,
-          results,
-          difficulty
+          results
         },
         replace: true
       });
