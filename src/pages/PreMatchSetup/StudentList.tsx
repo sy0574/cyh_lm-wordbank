@@ -33,7 +33,7 @@ export const StudentList = ({ availableStudents, onStudentsChange }: StudentList
     <Card className="p-4">
       <h3 className="text-lg font-semibold mb-3">Students in Class</h3>
       <ScrollArea className="h-[200px] rounded-md border p-2">
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {availableStudents.map((student) => (
             <div
               key={student.id}
@@ -49,7 +49,7 @@ export const StudentList = ({ availableStudents, onStudentsChange }: StudentList
               </Avatar>
               <label
                 htmlFor={student.id}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer truncate"
               >
                 {student.name}
               </label>
@@ -63,3 +63,4 @@ export const StudentList = ({ availableStudents, onStudentsChange }: StudentList
     </Card>
   );
 };
+
