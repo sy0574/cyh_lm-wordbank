@@ -1,9 +1,39 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building, Globe, Rocket, Trophy, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Index() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check initial auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      navigate("/setup");
+    } else {
+      navigate("/auth");
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -18,8 +48,8 @@ export default function Index() {
               Transform vocabulary learning into an engaging battle of knowledge. Perfect for students and educators seeking measurable results.
             </p>
             <div className="flex gap-4">
-              <Button size="lg" className="rounded-full" asChild>
-                <Link to="/auth">Get Started</Link>
+              <Button size="lg" className="rounded-full" onClick={handleGetStarted}>
+                {isAuthenticated ? "Start Learning" : "Get Started"}
               </Button>
               <Button variant="outline" size="lg" className="rounded-full">
                 Watch Demo
@@ -88,8 +118,8 @@ export default function Index() {
               <p className="max-w-2xl text-muted-foreground">
                 Join thousands of educators who have already revolutionized their English teaching methods with our platform.
               </p>
-              <Button size="lg" className="rounded-full" asChild>
-                <Link to="/auth">Start Your Free Trial</Link>
+              <Button size="lg" className="rounded-full" onClick={handleGetStarted}>
+                {isAuthenticated ? "Start Learning" : "Start Your Free Trial"}
               </Button>
             </CardContent>
           </Card>
