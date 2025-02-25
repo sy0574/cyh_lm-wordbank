@@ -11,11 +11,14 @@ import { useMatchFeedback } from "@/hooks/useMatchFeedback";
 import { useMatchResults } from "@/hooks/useMatchResults";
 import { MAX_TIME } from "@/utils/scoring";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const MatchArena = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { students, wordList, questionsPerStudent, selectedLanguage } = location.state || {};
+  const [isGuest, setIsGuest] = useState(true);
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
@@ -37,6 +40,18 @@ const MatchArena = () => {
     }
 
     selectNextStudent();
+
+    // Check authentication status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsGuest(!session);
+    });
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsGuest(!session);
+    });
+
+    return () => subscription.unsubscribe();
   }, [wordList, students, navigate, selectNextStudent]);
 
   const handleAnswer = async (isCorrect: boolean) => {
@@ -55,7 +70,7 @@ const MatchArena = () => {
     }
     
     const streakFeedback = getStreakFeedback(correct);
-
+    
     try {
       await saveResult(
         currentStudent,
@@ -92,6 +107,10 @@ const MatchArena = () => {
     }
   };
 
+  const handleSignInClick = () => {
+    navigate("/auth");
+  };
+
   const handleViewResults = () => {
     try {
       navigate("/match-summary", {
@@ -124,6 +143,17 @@ const MatchArena = () => {
 
   return (
     <div className="container max-w-2xl mx-auto py-12 px-4">
+      {isGuest && (
+        <div className="bg-accent/10 p-4 rounded-lg mb-6 flex items-center justify-between">
+          <p className="text-sm text-accent">
+            You're in guest mode. Sign in to save your match results!
+          </p>
+          <Button variant="outline" size="sm" onClick={handleSignInClick}>
+            Sign In
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-8 slide-up">
         <Podium rankings={rankings} />
 
@@ -158,4 +188,3 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
-

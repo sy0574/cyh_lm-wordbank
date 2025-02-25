@@ -22,6 +22,31 @@ export const useMatchResults = () => {
       console.log('Creating match result payload...');
       const timestamp = new Date().toISOString();
       
+      const result: MatchResult = {
+        word,
+        correct,
+        student,
+        responseTime,
+        pointsEarned,
+        answerNumber,
+        answeredAt: new Date(timestamp)
+      };
+      
+      setResults(prev => [...prev, result]);
+
+      // Check if user is logged in before saving to Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.log('User not logged in - skipping database save');
+        toast({
+          title: "Guest Mode",
+          description: "Sign in to save your match results!",
+          variant: "default",
+        });
+        return;
+      }
+
+      console.log('Attempting to save match result to database...');
       const payload = {
         student_id: student.id,
         word,
@@ -32,8 +57,6 @@ export const useMatchResults = () => {
         difficulty: category,
         answered_at: timestamp
       };
-
-      console.log('Attempting to save match result with payload:', payload);
 
       const { data, error } = await supabase
         .from('match_history')
@@ -50,17 +73,6 @@ export const useMatchResults = () => {
 
       console.log('Match result saved successfully with ID:', data?.id);
 
-      const newResult: MatchResult = {
-        word,
-        correct,
-        student,
-        responseTime,
-        pointsEarned,
-        answerNumber,
-        answeredAt: new Date(timestamp)
-      };
-
-      setResults(prev => [...prev, newResult]);
     } catch (error) {
       console.error('Error saving match result:', error);
       
