@@ -17,8 +17,8 @@ import { useEffect, useState } from "react";
 import { useToast } from "./ui/use-toast";
 
 interface Profile {
-  username: string;
-  avatar_seed: string;
+  name: string;
+  avatar: string | null;
 }
 
 export function UserNav() {
@@ -33,8 +33,8 @@ export function UserNav() {
         
         if (user) {
           const { data, error } = await supabase
-            .from('profiles')
-            .select('username, avatar_seed')
+            .from('students')
+            .select('name, avatar')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -85,15 +85,15 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://api.dicebear.com/7.x/personas/svg?seed=${profile.avatar_seed}`} alt={profile.username} />
-            <AvatarFallback>{profile.username.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={profile.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${profile.name}`} alt={profile.name} />
+            <AvatarFallback>{profile.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{profile.username}</p>
+            <p className="text-sm font-medium leading-none">{profile.name}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
