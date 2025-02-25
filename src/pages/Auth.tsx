@@ -26,7 +26,7 @@ export default function Auth() {
         password,
         options: {
           data: {
-            username,
+            username, // This will be used by the trigger to create the profile
           },
         },
       });
@@ -62,7 +62,11 @@ export default function Auth() {
 
       if (error) throw error;
 
-      if (data.user) {
+      if (data?.user) {
+        toast({
+          title: "Welcome back!",
+          description: "Successfully signed in.",
+        });
         navigate("/");
       }
     } catch (error: any) {
@@ -77,7 +81,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome</CardTitle>
