@@ -12,7 +12,6 @@ import Rankings from "@/components/match-summary/Rankings";
 import MatchHeader from "@/components/match-summary/MatchHeader";
 import MatchActions from "@/components/match-summary/MatchActions";
 import TimeFilter from "@/components/match-summary/TimeFilter";
-import { getStudentsByClass } from "@/data/studentData";
 import { generateReportHtml } from "@/utils/reportGenerator";
 import { useStudentStats } from "@/hooks/useStudentStats";
 import { useRankings } from "@/hooks/useRankings";
@@ -51,9 +50,7 @@ const MatchSummary = () => {
 
     if (students.length > 0) {
       const firstStudent = students[0];
-      const studentData = getStudentsByClass("");
-      const studentClass = studentData.find(s => s.id === firstStudent.id)?.class || "";
-      setSelectedClass(studentClass);
+      setSelectedClass(firstStudent.class || "");
     }
   }, [location.state, students, selectedStudentId, navigate]);
 
@@ -87,8 +84,7 @@ const MatchSummary = () => {
 
     const filteredStats = studentStats.filter(stat => {
       const student = students.find(s => s.name === stat.name);
-      const studentData = getStudentsByClass("");
-      return selectedClass === "" || studentData.find(s => s.id === student?.id)?.class === selectedClass;
+      return selectedClass === "" || student?.class === selectedClass;
     });
 
     const htmlContent = generateReportHtml(filteredStats, selectedClass, timeFilter);
@@ -111,7 +107,7 @@ const MatchSummary = () => {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between">
                   <StudentSelector
-                    students={students}
+                    selectedClass={selectedClass}
                     selectedStudentId={selectedStudentId}
                     setSelectedStudentId={setSelectedStudentId}
                     difficulty={difficulty}
@@ -158,3 +154,4 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
+

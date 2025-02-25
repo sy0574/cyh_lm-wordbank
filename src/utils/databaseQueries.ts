@@ -5,7 +5,7 @@ export const getUniqueClasses = async () => {
   const { data, error } = await supabase
     .from('students')
     .select('class')
-    .distinct();
+    .group_by('class');
 
   if (error) {
     console.error('Error fetching classes:', error);
@@ -28,3 +28,4 @@ export const getStudentsByClass = async (className: string) => {
 
   return data;
 };
+

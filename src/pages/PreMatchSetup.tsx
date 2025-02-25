@@ -8,11 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Book, GraduationCap } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { wordData, WordData } from "@/data/wordData";
-import { getUniqueClasses, getStudentsByClass } from "@/data/studentData";
 import { DifficultySelect } from "./PreMatchSetup/DifficultySelect";
 import { ClassSelect } from "./PreMatchSetup/ClassSelect";
 import { StudentList } from "./PreMatchSetup/StudentList";
 import { Student } from "@/types/match";
+import { useQuery } from "@tanstack/react-query";
+import { getStudentsByClass } from "@/utils/databaseQueries";
 
 const PreMatchSetup = () => {
   const navigate = useNavigate();
@@ -20,29 +21,22 @@ const PreMatchSetup = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["Basic"]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(3);
-  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Chinese">("English");
-  const classes = getUniqueClasses();
 
-  const generateAvatar = (seed: string) => {
-    return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}`;
-  };
+  const { data: students = [] } = useQuery({
+    queryKey: ['students', selectedClass],
+    queryFn: () => getStudentsByClass(selectedClass),
+    enabled: !!selectedClass
+  });
 
   useEffect(() => {
-    if (selectedClass) {
-      const classStudents = getStudentsByClass(selectedClass).map(s => ({
-        id: s.id,
-        name: s.name,
-        avatar: generateAvatar(s.name)
-      }));
-      setStudents(classStudents);
-      setSelectedStudents(classStudents);
+    if (selectedClass && students.length > 0) {
+      setSelectedStudents(students);
     } else {
-      setStudents([]);
       setSelectedStudents([]);
     }
-  }, [selectedClass]);
+  }, [selectedClass, students]);
 
   const handleQuestionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
@@ -130,7 +124,6 @@ const PreMatchSetup = () => {
           <div className="space-y-4">
             <ClassSelect
               selectedClass={selectedClass}
-              classes={classes}
               onClassChange={setSelectedClass}
             />
 
