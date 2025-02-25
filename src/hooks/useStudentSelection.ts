@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Student, MatchResult } from "@/types/match";
 import { useNavigate } from "react-router-dom";
@@ -17,25 +16,48 @@ export const useStudentSelection = (
   const [lastSelectedStudentId, setLastSelectedStudentId] = useState<string | null>(null);
 
   const announceStudent = async (student: Student) => {
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+    console.log("Attempting to announce student:", student.name);
 
-      // Create new utterance with just the student's name
-      const utterance = new SpeechSynthesisUtterance(student.name);
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-
-      // Speak the name
-      window.speechSynthesis.speak(utterance);
-    } else {
+    if (!('speechSynthesis' in window)) {
       console.error("Browser does not support speech synthesis");
       toast({
         title: "TTS Error",
         description: "Your browser does not support text-to-speech",
         variant: "destructive",
       });
+      return;
     }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    // Create new utterance
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.text = student.name;
+    utterance.rate = 0.8;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.lang = 'en-US';
+
+    // Add event handlers for debugging
+    utterance.onstart = () => console.log("Started speaking:", student.name);
+    utterance.onend = () => console.log("Finished speaking:", student.name);
+    utterance.onerror = (event) => console.error("Speech synthesis error:", event);
+
+    // Ensure voices are loaded
+    if (speechSynthesis.getVoices().length === 0) {
+      // Wait for voices to be loaded
+      await new Promise<void>((resolve) => {
+        speechSynthesis.onvoiceschanged = () => {
+          console.log("Voices loaded:", speechSynthesis.getVoices().length);
+          resolve();
+        };
+      });
+    }
+
+    // Speak the name
+    console.log("Speaking:", student.name);
+    window.speechSynthesis.speak(utterance);
   };
 
   const shouldEndMatch = () => {
@@ -104,4 +126,3 @@ export const useStudentSelection = (
     studentAnswerCounts
   };
 };
-
