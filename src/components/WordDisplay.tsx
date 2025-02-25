@@ -3,6 +3,7 @@ import { Student } from "@/types/match";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 
 interface WordDisplayProps {
   currentStudent: Student;
@@ -53,7 +54,7 @@ const WordDisplay = ({
   const alternateText = selectedLanguage === "Chinese" ? word : chineseDefinition;
 
   return (
-    <div className="relative">
+    <div className="relative max-w-xl mx-auto">
       <div className="relative">
         <svg className="absolute inset-0 w-full h-full -m-[1px]">
           <line
@@ -79,25 +80,25 @@ const WordDisplay = ({
           />
         </svg>
         
-        <Card className="p-4 border-0 relative z-10">
-          <div className="text-center space-y-2 relative">
-            <div className="flex flex-col items-center justify-center gap-1.5">
+        <Card className="p-6 border-0 relative z-10 backdrop-blur-sm bg-card/90 shadow-lg">
+          <div className="text-center space-y-4 relative">
+            <div className="flex flex-col items-center justify-center gap-2">
               <button
                 onClick={() => setShowDefinition(!showDefinition)}
-                className="group relative w-14 h-14 cursor-pointer focus:outline-none"
+                className="group relative w-16 h-16 cursor-pointer focus:outline-none transition-transform hover:scale-105"
                 title={showDefinition ? "Hide translation" : "Show translation"}
               >
-                <svg className="absolute -top-1 -left-1 w-16 h-16 -rotate-90">
+                <svg className="absolute -top-1 -left-1 w-[72px] h-[72px] -rotate-90">
                   <circle
-                    cx="32"
-                    cy="32"
-                    r="28"
-                    className="fill-none stroke-muted stroke-[3]"
+                    cx="36"
+                    cy="36"
+                    r="32"
+                    className="fill-none stroke-muted/50 stroke-[3]"
                   />
                   <circle
-                    cx="32"
-                    cy="32"
-                    r="28"
+                    cx="36"
+                    cy="36"
+                    r="32"
                     className="fill-none stroke-primary stroke-[3]"
                     style={{
                       strokeDasharray: timerCircumference,
@@ -109,28 +110,31 @@ const WordDisplay = ({
                 <img
                   src={currentStudent.avatar}
                   alt={`${currentStudent.name}'s avatar`}
-                  className="w-14 h-14 rounded-full relative z-10 transition-opacity group-hover:opacity-80"
+                  className="w-16 h-16 rounded-full relative z-10 transition-opacity group-hover:opacity-90 ring-2 ring-primary/20"
                 />
               </button>
-              <span className="font-medium text-base">{currentStudent.name}</span>
+              <span className="font-medium text-base text-muted-foreground">{currentStudent.name}</span>
             </div>
             
-            <div className="relative min-h-[100px]">
+            <div className="relative min-h-[120px] py-4">
               {partOfSpeech && (
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-0.5">
-                  <span>{partOfSpeech}</span>
+                <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-secondary text-xs font-medium text-secondary-foreground mb-3">
+                  {partOfSpeech}
                 </div>
               )}
               
               <div className="relative">
-                <h2 className="text-4xl font-bold tracking-tight mb-1">{displayText}</h2>
+                <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">
+                  {displayText}
+                </h2>
                 {showPoints && earnedPoints > 0 && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute -top-8 right-1/4 text-3xl font-bold text-green-500"
+                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                    className="absolute -top-8 right-1/4 flex items-center gap-1 text-3xl font-bold text-primary"
                   >
+                    <Sparkles className="w-5 h-5" />
                     +{earnedPoints}
                   </motion.div>
                 )}
@@ -142,7 +146,7 @@ const WordDisplay = ({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="text-base text-muted-foreground"
+                    className="text-base text-muted-foreground mt-2"
                   >
                     {alternateText}
                   </motion.div>
@@ -153,10 +157,10 @@ const WordDisplay = ({
             <AnimatePresence>
               {showFeedback && feedback.correct === false && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-lg font-semibold text-destructive mt-1"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="text-lg font-semibold text-destructive mt-1 p-2 rounded-lg bg-destructive/10"
                 >
                   {feedback.message}
                 </motion.div>
@@ -170,4 +174,3 @@ const WordDisplay = ({
 };
 
 export default WordDisplay;
-
