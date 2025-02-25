@@ -14,11 +14,11 @@ import { generateReportHtml } from "@/utils/reportGenerator";
 const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { students = [], results = [], difficulty = "medium" } = location.state || {};
+  const { students = [], difficulty = "medium" } = location.state || {};
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("");
 
-  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students, results);
+  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students);
   const { getRankings } = useRankings(studentStats, students);
 
   useEffect(() => {
