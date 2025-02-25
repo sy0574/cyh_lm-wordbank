@@ -19,6 +19,9 @@ export const useMatchResults = () => {
     category: string
   ) => {
     try {
+      console.log('Creating match result payload...');
+      const timestamp = new Date().toISOString();
+      
       const payload = {
         student_id: student.id,
         word,
@@ -26,23 +29,26 @@ export const useMatchResults = () => {
         response_time: Math.round(responseTime),
         points_earned: Math.round(pointsEarned),
         answer_number: answerNumber,
-        difficulty: category
+        difficulty: category,
+        answered_at: timestamp
       };
 
       console.log('Attempting to save match result with payload:', payload);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('match_history')
         .insert([payload])
         .select('id')
         .single();
 
       if (error) {
-        console.error('Supabase error details:', error);
-        throw error;
+        console.error('Database error:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error details:', error);
+        throw new Error(error.message);
       }
 
-      console.log('Match result saved successfully');
+      console.log('Match result saved successfully with ID:', data?.id);
 
       const newResult: MatchResult = {
         word,
@@ -51,17 +57,30 @@ export const useMatchResults = () => {
         responseTime,
         pointsEarned,
         answerNumber,
-        answeredAt: new Date()
+        answeredAt: new Date(timestamp)
       };
 
       setResults(prev => [...prev, newResult]);
+      
+      toast({
+        title: "Success",
+        description: "Match result saved successfully",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Error saving match result:', error);
+      
+      // Show a more specific error message to the user
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save match result. Please try again.",
+        description: error instanceof Error 
+          ? `Failed to save match result: ${error.message}` 
+          : "Failed to save match result. Please try again.",
         variant: "destructive",
       });
+
+      // Rethrow the error so the calling code can handle it if needed
+      throw error;
     }
   };
 
