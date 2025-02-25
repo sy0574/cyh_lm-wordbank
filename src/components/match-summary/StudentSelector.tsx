@@ -2,8 +2,8 @@
 import { Student } from "@/types/match";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { getStudentsByClass } from "@/utils/databaseQueries";
+import { useStudentsByClass } from "@/utils/databaseQueries";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StudentSelectorProps {
   selectedClass: string;
@@ -13,11 +13,7 @@ interface StudentSelectorProps {
 }
 
 const StudentSelector = ({ selectedClass, selectedStudentId, setSelectedStudentId }: StudentSelectorProps) => {
-  const { data: students = [], isLoading } = useQuery({
-    queryKey: ['students', selectedClass],
-    queryFn: () => getStudentsByClass(selectedClass),
-    enabled: !!selectedClass
-  });
+  const { data: students = [], isLoading } = useStudentsByClass(selectedClass);
 
   if (isLoading) {
     return (
@@ -25,7 +21,7 @@ const StudentSelector = ({ selectedClass, selectedStudentId, setSelectedStudentI
         <Label>Select Student</Label>
         <div className="grid grid-cols-2 gap-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-muted animate-pulse rounded-md" />
+            <Skeleton key={i} className="h-8 w-full" />
           ))}
         </div>
       </div>

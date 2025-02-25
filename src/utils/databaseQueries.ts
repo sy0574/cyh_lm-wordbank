@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export const getUniqueClasses = async () => {
   const { data, error } = await supabase
@@ -20,6 +21,31 @@ export const getUniqueClasses = async () => {
   return data;
 };
 
+export const useStudentsByClass = (className: string) => {
+  return useQuery({
+    queryKey: ['students', className],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('class', className);
+
+      if (error) {
+        console.error('Error fetching students:', error);
+        return [];
+      }
+
+      return data.map(student => ({
+        ...student,
+        avatar: `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.id}`
+      }));
+    },
+    enabled: !!className,
+    staleTime: 1000 * 60 * 5, // 缓存5分钟
+    cacheTime: 1000 * 60 * 30, // 数据在缓存中保留30分钟
+  });
+};
+
 export const getStudentsByClass = async (className: string) => {
   const { data, error } = await supabase
     .from('students')
@@ -31,9 +57,8 @@ export const getStudentsByClass = async (className: string) => {
     return [];
   }
 
-  // Transform the data to include an avatar field
   return data.map(student => ({
     ...student,
-    avatar: `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.id}` // Using DiceBear for avatars
+    avatar: `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.id}`
   }));
 };
