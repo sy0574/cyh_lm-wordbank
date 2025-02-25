@@ -8,6 +8,7 @@ import PreMatchSetup from "./pages/PreMatchSetup";
 import MatchArena from "./pages/MatchArena";
 import MatchSummary from "./pages/MatchSummary";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +19,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<PreMatchSetup />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/setup" element={<PreMatchSetup />} />
           <Route path="/match-arena" element={<MatchArena />} />
           <Route path="/match-summary" element={<MatchSummary />} />
           <Route path="*" element={<NotFound />} />
