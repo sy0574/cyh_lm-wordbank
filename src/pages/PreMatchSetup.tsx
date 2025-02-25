@@ -19,7 +19,7 @@ const PreMatchSetup = () => {
   const { toast } = useToast();
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["Basic"]);
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
+  const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(3);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Chinese">("English");
