@@ -4,7 +4,7 @@ export interface Student {
   name: string;
   avatar: string;
   category?: string;
-  class: string;  // Added this line
+  class: string;
 }
 
 export interface MatchResult {
@@ -14,7 +14,7 @@ export interface MatchResult {
   responseTime: number;
   pointsEarned: number;
   answerNumber: number;
-  answeredAt?: Date;
+  answeredAt: Date;
 }
 
 export interface StudentScore {
@@ -34,7 +34,7 @@ export interface StudentStats {
     responseTime: number;
     pointsEarned: number;
     answerNumber: number;
-    answeredAt?: Date;
+    answeredAt: Date;
   }>;
 }
 

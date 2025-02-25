@@ -16,7 +16,7 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     return results.filter(result => {
-      const resultDate = new Date(result.answeredAt || new Date());
+      const resultDate = result.answeredAt;
       switch (timeFilter) {
         case TIME_FILTERS.TODAY:
           return resultDate >= startOfDay;
@@ -32,7 +32,6 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
 
   const processMatchHistory = async (studentIds: string[]): Promise<StudentStats[]> => {
     try {
-      // Fetch all match history for the selected student IDs
       const { data: matchHistoryData, error } = await supabase
         .from('match_history')
         .select('*')
@@ -45,7 +44,6 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
 
       console.log(`Found ${matchHistoryData?.length || 0} match history records`);
 
-      // Process the match history data
       const formattedResults: MatchResult[] = (matchHistoryData || []).map(result => {
         const student = students.find(s => s.id === result.student_id);
         if (!student) {
@@ -59,14 +57,13 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
           responseTime: result.response_time,
           pointsEarned: result.points_earned,
           answerNumber: result.answer_number,
-          answeredAt: result.answered_at ? new Date(result.answered_at) : new Date()
+          answeredAt: new Date(result.answered_at || Date.now())
         };
       }).filter((result): result is MatchResult => result !== null);
 
       const filteredResults = filterResultsByTime(formattedResults);
       console.log('Time-filtered results:', filteredResults);
 
-      // Create stats for each student in the filtered class
       const relevantStudents = students.filter(student => 
         selectedClass === "all" || student.class === selectedClass
       );
@@ -150,3 +147,4 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     loading
   };
 };
+
