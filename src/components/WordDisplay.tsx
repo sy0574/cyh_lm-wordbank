@@ -80,7 +80,7 @@ const WordDisplay = ({
         </svg>
         
         <Card className="p-4 border-0 relative z-10">
-          <div className="text-center space-y-3 relative">
+          <div className="text-center space-y-2 relative">
             <div className="flex flex-col items-center justify-center gap-1.5">
               <button
                 onClick={() => setShowDefinition(!showDefinition)}
@@ -115,13 +115,26 @@ const WordDisplay = ({
               <span className="font-medium text-base">{currentStudent.name}</span>
             </div>
             
-            <div className="relative min-h-[120px]">
+            <div className="relative min-h-[100px]">
               {partOfSpeech && (
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-0.5">
                   <span>{partOfSpeech}</span>
                 </div>
               )}
-              <h2 className="text-4xl font-bold tracking-tight mb-1">{displayText}</h2>
+              
+              <div className="relative">
+                <h2 className="text-4xl font-bold tracking-tight mb-1">{displayText}</h2>
+                {showPoints && earnedPoints > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute -top-8 right-1/4 text-3xl font-bold text-green-500"
+                  >
+                    +{earnedPoints}
+                  </motion.div>
+                )}
+              </div>
               
               <AnimatePresence>
                 {showDefinition && (
@@ -138,22 +151,12 @@ const WordDisplay = ({
             </div>
 
             <AnimatePresence>
-              {showPoints && earnedPoints > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-3xl font-bold text-green-500 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
-                >
-                  +{earnedPoints}
-                </motion.div>
-              )}
               {showFeedback && feedback.correct === false && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="text-lg font-semibold text-destructive"
+                  className="text-lg font-semibold text-destructive mt-1"
                 >
                   {feedback.message}
                 </motion.div>
@@ -167,3 +170,4 @@ const WordDisplay = ({
 };
 
 export default WordDisplay;
+
