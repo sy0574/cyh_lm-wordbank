@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Settings, User } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -97,3 +97,4 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
+

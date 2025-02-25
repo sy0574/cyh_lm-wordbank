@@ -12,7 +12,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import { UserNav } from "./components/UserNav";
 import * as React from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "./integrations/supabase/client";
 
 function App() {
   const queryClient = React.useRef(new QueryClient());
@@ -59,3 +59,4 @@ function App() {
 }
 
 export default App;
+
