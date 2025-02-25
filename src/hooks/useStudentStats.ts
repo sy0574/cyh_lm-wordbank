@@ -112,4 +112,3 @@ export const useStudentStats = (students: Student[]) => {
     loading
   };
 };
-
