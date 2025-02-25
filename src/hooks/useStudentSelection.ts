@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Student, MatchResult } from "@/types/match";
 import { useNavigate } from "react-router-dom";
@@ -29,53 +30,56 @@ export const useStudentSelection = (
     }
 
     try {
-      // Cancel any ongoing speech
+      // Cancel any ongoing speech and wait a moment
       window.speechSynthesis.cancel();
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Create new utterance
-      const utterance = new SpeechSynthesisUtterance();
+      const utterance = new SpeechSynthesisUtterance(student.name);
       
-      // Wait for voices to be loaded
-      let voices = speechSynthesis.getVoices();
+      // Get available voices
+      let voices = window.speechSynthesis.getVoices();
+      
+      // If voices aren't loaded yet, wait for them
       if (voices.length === 0) {
-        await new Promise<void>((resolve) => {
-          speechSynthesis.onvoiceschanged = () => {
-            voices = speechSynthesis.getVoices();
-            resolve();
+        voices = await new Promise((resolve) => {
+          const onVoicesChanged = () => {
+            window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+            resolve(window.speechSynthesis.getVoices());
           };
+          window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
         });
       }
 
-      // Try to find an English voice
+      // Find an English voice
       const englishVoice = voices.find(voice => 
-        voice.lang.includes('en') && voice.localService
+        voice.lang.startsWith('en') && voice.localService
       ) || voices[0];
 
       if (englishVoice) {
         utterance.voice = englishVoice;
       }
 
-      utterance.text = student.name;
+      // Configure utterance
       utterance.rate = 0.8;
       utterance.pitch = 1;
       utterance.volume = 1;
       utterance.lang = 'en-US';
 
-      // Add event handlers for debugging
+      // Add event handlers
       utterance.onstart = () => console.log("Started speaking:", student.name);
       utterance.onend = () => console.log("Finished speaking:", student.name);
       utterance.onerror = (event) => {
         console.error("Speech synthesis error:", event);
-        toast({
-          title: "TTS Error",
-          description: "Failed to announce student name",
-          variant: "destructive",
-        });
+        if (event.error !== 'canceled') {  // Ignore canceled errors
+          toast({
+            title: "TTS Error",
+            description: "Failed to announce student name",
+            variant: "destructive",
+          });
+        }
       };
 
-      // Force a pause before speaking to ensure proper initialization
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Speak the name
       console.log("Speaking:", student.name);
       window.speechSynthesis.speak(utterance);
