@@ -28,23 +28,42 @@ export function UserNav() {
 
   useEffect(() => {
     async function getProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('username, avatar_seed')
-          .eq('id', user.id)
-          .maybeSingle();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('username, avatar_seed')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        if (data) {
-          setProfile(data);
+          if (error) {
+            console.error('Error fetching profile:', error);
+            toast({
+              variant: "destructive",
+              title: "Error fetching profile",
+              description: error.message,
+            });
+            return;
+          }
+
+          if (data) {
+            setProfile(data);
+          }
         }
+      } catch (error: any) {
+        console.error('Error in getProfile:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading profile",
+          description: error.message,
+        });
       }
     }
 
     getProfile();
-  }, []);
+  }, [toast]);
 
   const handleSignOut = async () => {
     try {
@@ -97,4 +116,3 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
-
