@@ -2,7 +2,6 @@
 import { Student } from "@/types/match";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 interface WordDisplayProps {
@@ -83,7 +82,11 @@ const WordDisplay = ({
         <Card className="p-8 border-0 relative z-10">
           <div className="text-center space-y-6 relative">
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="relative w-16 h-16">
+              <button
+                onClick={() => setShowDefinition(!showDefinition)}
+                className="group relative w-16 h-16 cursor-pointer focus:outline-none"
+                title={showDefinition ? "Hide translation" : "Show translation"}
+              >
                 <svg className="absolute -top-1 -left-1 w-[72px] h-[72px] -rotate-90">
                   <circle
                     cx="36"
@@ -106,43 +109,44 @@ const WordDisplay = ({
                 <img
                   src={currentStudent.avatar}
                   alt={`${currentStudent.name}'s avatar`}
-                  className="w-16 h-16 rounded-full relative z-10"
+                  className="w-16 h-16 rounded-full relative z-10 transition-opacity group-hover:opacity-80"
                 />
-              </div>
+              </button>
               <span className="font-medium text-lg">{currentStudent.name}</span>
             </div>
             
-            <div className="relative">
+            <div className="relative min-h-[200px]">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
                 <span>{partOfSpeech}</span>
               </div>
               <h2 className="text-5xl font-bold tracking-tight">{displayText}</h2>
-              <button
-                onClick={() => setShowDefinition(!showDefinition)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground transition-colors"
-                title={showDefinition ? "Hide translation" : "Show translation"}
-              >
-                {showDefinition ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-              {showDefinition && (
-                <div className="mt-4 text-lg text-muted-foreground">
-                  {alternateText}
-                </div>
-              )}
+              
+              <AnimatePresence>
+                {showDefinition && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4 text-lg text-muted-foreground"
+                  >
+                    {alternateText}
+                  </motion.div>
+                )}
+
+                {showPoints && earnedPoints > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-4 text-4xl font-bold text-green-500"
+                  >
+                    +{earnedPoints}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <AnimatePresence>
-              {showPoints && earnedPoints > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-4xl font-bold text-accent"
-                >
-                  +{earnedPoints}
-                </motion.div>
-              )}
               {showFeedback && feedback.correct === false && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -162,4 +166,3 @@ const WordDisplay = ({
 };
 
 export default WordDisplay;
-
