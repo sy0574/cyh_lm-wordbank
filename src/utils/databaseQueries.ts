@@ -62,4 +62,3 @@ export const getStudentsByClass = async (className: string) => {
     avatar: `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.id}`
   }));
 };
-

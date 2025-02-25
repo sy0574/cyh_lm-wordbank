@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
-export const useStudentStats = (students: Student[]) => {
+export const useStudentStats = (students: Student[], selectedClass: string) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(TIME_FILTERS.ALL);
 
   const filterResultsByTime = (results: MatchResult[]) => {
@@ -76,7 +76,7 @@ export const useStudentStats = (students: Student[]) => {
   };
 
   const { data: studentStats = [], isLoading: loading } = useQuery({
-    queryKey: ['matchHistory', students.map(s => s.id).join(','), timeFilter],
+    queryKey: ['matchHistory', selectedClass, students.map(s => s.id).join(','), timeFilter],
     queryFn: async () => {
       try {
         const studentIds = students.map(s => s.id);

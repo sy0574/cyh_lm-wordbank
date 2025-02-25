@@ -42,7 +42,7 @@ const MatchSummary = () => {
     }
   }, [location.state, navigate, selectedStudentId]);
 
-  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students);
+  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students, selectedClass);
   const { getRankings } = useRankings(studentStats, students);
 
   if (loading) {
@@ -61,7 +61,6 @@ const MatchSummary = () => {
     stats.name === students.find(s => s.id === selectedStudentId)?.name
   );
 
-  // 根据所选班级筛选排名数据
   const filteredRankings = getRankings().filter(ranking => 
     selectedClass === "all" || ranking.student.class === selectedClass
   );
