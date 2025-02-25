@@ -28,36 +28,66 @@ export const useStudentSelection = (
       return;
     }
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+    try {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
-    // Create new utterance
-    const utterance = new SpeechSynthesisUtterance();
-    utterance.text = student.name;
-    utterance.rate = 0.8;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    utterance.lang = 'en-US';
-
-    // Add event handlers for debugging
-    utterance.onstart = () => console.log("Started speaking:", student.name);
-    utterance.onend = () => console.log("Finished speaking:", student.name);
-    utterance.onerror = (event) => console.error("Speech synthesis error:", event);
-
-    // Ensure voices are loaded
-    if (speechSynthesis.getVoices().length === 0) {
+      // Create new utterance
+      const utterance = new SpeechSynthesisUtterance();
+      
       // Wait for voices to be loaded
-      await new Promise<void>((resolve) => {
-        speechSynthesis.onvoiceschanged = () => {
-          console.log("Voices loaded:", speechSynthesis.getVoices().length);
-          resolve();
-        };
+      let voices = speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        await new Promise<void>((resolve) => {
+          speechSynthesis.onvoiceschanged = () => {
+            voices = speechSynthesis.getVoices();
+            resolve();
+          };
+        });
+      }
+
+      // Try to find an English voice
+      const englishVoice = voices.find(voice => 
+        voice.lang.includes('en') && voice.localService
+      ) || voices[0];
+
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+
+      utterance.text = student.name;
+      utterance.rate = 0.8;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      utterance.lang = 'en-US';
+
+      // Add event handlers for debugging
+      utterance.onstart = () => console.log("Started speaking:", student.name);
+      utterance.onend = () => console.log("Finished speaking:", student.name);
+      utterance.onerror = (event) => {
+        console.error("Speech synthesis error:", event);
+        toast({
+          title: "TTS Error",
+          description: "Failed to announce student name",
+          variant: "destructive",
+        });
+      };
+
+      // Force a pause before speaking to ensure proper initialization
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Speak the name
+      console.log("Speaking:", student.name);
+      window.speechSynthesis.speak(utterance);
+
+    } catch (error) {
+      console.error("TTS error:", error);
+      toast({
+        title: "TTS Error",
+        description: "Failed to announce student name",
+        variant: "destructive",
       });
     }
-
-    // Speak the name
-    console.log("Speaking:", student.name);
-    window.speechSynthesis.speak(utterance);
   };
 
   const shouldEndMatch = () => {
