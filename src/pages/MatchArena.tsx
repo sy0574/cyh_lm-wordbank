@@ -18,9 +18,11 @@ const MatchArena = () => {
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
   const [results, setResults] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState({ correct: false, message: "" });
+  const [feedback, setFeedback] = useState({ correct: false, message: "", type: undefined });
   const [showResultsPopup, setShowResultsPopup] = useState(false);
   const [isMatchComplete, setIsMatchComplete] = useState(false);
+  const [correctStreak, setCorrectStreak] = useState(0);
+  const [incorrectStreak, setIncorrectStreak] = useState(0);
 
   const { timeLeft, potentialPoints } = useMatchTimer(wordStartTime);
   const { score, showPoints, setShowPoints, earnedPoints, updateScores, getRankings } = 
@@ -43,6 +45,38 @@ const MatchArena = () => {
     return totalAnswers >= requiredAnswers;
   };
 
+  const getStreakFeedback = (correct: boolean) => {
+    if (correct) {
+      const newStreak = correctStreak + 1;
+      setCorrectStreak(newStreak);
+      setIncorrectStreak(0);
+
+      if (newStreak >= 3) {
+        return {
+          message: "Amazing streak! You're on fire! 🔥",
+          type: 'streak' as const
+        };
+      }
+    } else {
+      const newStreak = incorrectStreak + 1;
+      setCorrectStreak(0);
+      setIncorrectStreak(newStreak);
+
+      if (newStreak >= 2) {
+        const messages = [
+          "Don't worry, even Einstein made mistakes! 🧠",
+          "Keep going! Success is stumbling from failure to failure! 💪",
+          "Every master was once a disaster! You've got this! 🌟"
+        ];
+        return {
+          message: messages[Math.floor(Math.random() * messages.length)],
+          type: 'warning' as const
+        };
+      }
+    }
+    return { message: "", type: 'normal' as const };
+  };
+
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
 
@@ -60,9 +94,11 @@ const MatchArena = () => {
       setIsMatchComplete(true);
     }
     
+    const streakFeedback = getStreakFeedback(correct);
     setFeedback({
       correct,
-      message: correct ? `+${pointsEarned} points!` : "Keep practicing!"
+      message: streakFeedback.message,
+      type: streakFeedback.type
     });
 
     const newResult = { 
@@ -97,7 +133,7 @@ const MatchArena = () => {
         setCurrentWordIndex(prev => prev + 1);
         setWordStartTime(Date.now());
       }
-    }, 1500);
+    }, 2000);
   };
 
   const handleViewResults = () => {
