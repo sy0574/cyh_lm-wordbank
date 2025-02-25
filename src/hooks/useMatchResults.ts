@@ -26,21 +26,23 @@ export const useMatchResults = () => {
         response_time: Math.round(responseTime),
         points_earned: Math.round(pointsEarned),
         answer_number: answerNumber,
-        difficulty: category // Map category to difficulty field for database compatibility
+        difficulty: category
       };
 
       console.log('Attempting to save match result with payload:', payload);
 
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('match_history')
-        .insert(payload);
+        .insert([payload])
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Supabase error details:', error);
         throw error;
       }
 
-      console.log('Match result saved successfully:', data);
+      console.log('Match result saved successfully');
 
       const newResult: MatchResult = {
         word,
@@ -72,4 +74,3 @@ export const useMatchResults = () => {
     saveResult
   };
 };
-
