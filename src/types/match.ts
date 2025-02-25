@@ -4,6 +4,7 @@ export interface Student {
   name: string;
   avatar: string;
   category?: string;
+  class: string;  // Added this line
 }
 
 export interface MatchResult {
