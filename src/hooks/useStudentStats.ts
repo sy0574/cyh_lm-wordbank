@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Student, StudentStats, MatchResult } from "@/types/match";
 import { TIME_FILTERS, TimeFilter } from "@/components/match-summary/TimeFilter";
@@ -23,21 +22,21 @@ export const useStudentStats = (students: Student[]) => {
           throw error;
         }
 
-        // 转换数据格式
         const formattedResults: MatchResult[] = data.map(result => ({
           word: result.word,
           correct: result.correct,
-          student: students.find(s => s.id === result.student_id)!,
+          student: {
+            ...students.find(s => s.id === result.student_id)!,
+            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`
+          },
           responseTime: result.response_time,
           pointsEarned: result.points_earned,
           answerNumber: result.answer_number,
           answeredAt: new Date(result.answered_at)
         }));
 
-        // 根据时间过滤数据
         const filteredResults = filterResultsByTime(formattedResults);
 
-        // 计算每个学生的统计数据
         const stats: StudentStats[] = students.map((student) => {
           const studentResults = filteredResults.filter((r) => r.student.id === student.id);
           const correct = studentResults.filter((r) => r.correct).length;
@@ -48,7 +47,7 @@ export const useStudentStats = (students: Student[]) => {
 
           return {
             name: student.name,
-            avatar: student.avatar,
+            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
             correct,
             total: studentResults.length,
             averageResponseTime:
@@ -80,7 +79,7 @@ export const useStudentStats = (students: Student[]) => {
     };
 
     fetchMatchHistory();
-  }, [students, timeFilter]); // 当学生列表或时间过滤器改变时重新获取数据
+  }, [students, timeFilter]);
 
   const filterResultsByTime = (results: MatchResult[]) => {
     const now = new Date();
