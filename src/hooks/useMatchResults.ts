@@ -19,27 +19,25 @@ export const useMatchResults = () => {
     difficulty: string
   ) => {
     try {
-      console.log('Attempting to save match result:', {
+      if (!difficulty) {
+        throw new Error('Difficulty level is required');
+      }
+
+      const payload = {
         student_id: student.id,
         word,
         correct,
-        response_time: responseTime,
-        points_earned: pointsEarned,
+        response_time: Math.round(responseTime),
+        points_earned: Math.round(pointsEarned),
         answer_number: answerNumber,
         difficulty
-      });
+      };
+
+      console.log('Attempting to save match result with payload:', payload);
 
       const { error, data } = await supabase
         .from('match_history')
-        .insert({
-          student_id: student.id,
-          word,
-          correct,
-          response_time: Math.round(responseTime), // Convert to integer
-          points_earned: Math.round(pointsEarned), // Convert to integer
-          answer_number: answerNumber,
-          difficulty
-        });
+        .insert(payload);
 
       if (error) {
         console.error('Supabase error details:', error);
@@ -63,7 +61,7 @@ export const useMatchResults = () => {
       console.error('Error saving match result:', error);
       toast({
         title: "Error",
-        description: "Failed to save match result. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save match result. Please try again.",
         variant: "destructive",
       });
     }

@@ -38,8 +38,21 @@ const MatchArena = () => {
       navigate("/");
       return;
     }
+
+    // Also validate difficulty is present
+    if (!difficulty) {
+      console.error("Missing difficulty level");
+      toast({
+        title: "Error",
+        description: "Difficulty level is required to start the match",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
+
     selectNextStudent();
-  }, [wordList, students, navigate]);
+  }, [wordList, students, difficulty, navigate, selectNextStudent]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
@@ -64,37 +77,42 @@ const MatchArena = () => {
       type: streakFeedback.type
     });
 
-    await saveResult(
-      currentStudent,
-      wordList[currentWordIndex].word,
-      correct,
-      responseTime,
-      pointsEarned,
-      results.filter(r => r.student.id === currentStudent.id).length + 1,
-      difficulty
-    );
+    try {
+      await saveResult(
+        currentStudent,
+        wordList[currentWordIndex].word,
+        correct,
+        responseTime,
+        pointsEarned,
+        results.filter(r => r.student.id === currentStudent.id).length + 1,
+        difficulty // Ensuring difficulty is passed here
+      );
 
-    setTimeout(() => {
-      setShowFeedback(false);
-      setShowPoints(false);
-      
-      if (shouldEnd) {
-        setShowResultsPopup(true);
-        return;
-      }
-      
-      const nextStudent = selectNextStudent();
-      
-      if (nextStudent === null) {
-        setShowResultsPopup(true);
-        return;
-      }
-      
-      if (currentWordIndex + 1 < wordList.length) {
-        setCurrentWordIndex(prev => prev + 1);
-        setWordStartTime(Date.now());
-      }
-    }, 2000);
+      setTimeout(() => {
+        setShowFeedback(false);
+        setShowPoints(false);
+        
+        if (shouldEnd) {
+          setShowResultsPopup(true);
+          return;
+        }
+        
+        const nextStudent = selectNextStudent();
+        
+        if (nextStudent === null) {
+          setShowResultsPopup(true);
+          return;
+        }
+        
+        if (currentWordIndex + 1 < wordList.length) {
+          setCurrentWordIndex(prev => prev + 1);
+          setWordStartTime(Date.now());
+        }
+      }, 2000);
+    } catch (error) {
+      console.error("Error in handleAnswer:", error);
+      // Error is already handled in saveResult, no need to show another toast
+    }
   };
 
   const handleViewResults = () => {
