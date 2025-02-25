@@ -5,7 +5,7 @@ export const getUniqueClasses = async () => {
   const { data, error } = await supabase
     .from('students')
     .select('class')
-    .group_by('class');
+    .distinct();
 
   if (error) {
     console.error('Error fetching classes:', error);
@@ -26,6 +26,9 @@ export const getStudentsByClass = async (className: string) => {
     return [];
   }
 
-  return data;
+  // Transform the data to include an avatar field
+  return data.map(student => ({
+    ...student,
+    avatar: `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.id}` // Using DiceBear for avatars
+  }));
 };
-

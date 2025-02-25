@@ -1,9 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Book, GraduationCap } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +9,7 @@ import { wordData, WordData } from "@/data/wordData";
 import { DifficultySelect } from "./PreMatchSetup/DifficultySelect";
 import { ClassSelect } from "./PreMatchSetup/ClassSelect";
 import { StudentList } from "./PreMatchSetup/StudentList";
+import { GameSettings } from "./PreMatchSetup/GameSettings";
 import { Student } from "@/types/match";
 import { useQuery } from "@tanstack/react-query";
 import { getStudentsByClass } from "@/utils/databaseQueries";
@@ -29,14 +28,6 @@ const PreMatchSetup = () => {
     queryFn: () => getStudentsByClass(selectedClass),
     enabled: !!selectedClass
   });
-
-  useEffect(() => {
-    if (selectedClass && students.length > 0) {
-      setSelectedStudents(students);
-    } else {
-      setSelectedStudents([]);
-    }
-  }, [selectedClass, students]);
 
   const handleQuestionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
@@ -134,28 +125,12 @@ const PreMatchSetup = () => {
               />
             )}
 
-            <div className="space-y-2">
-              <Label>Questions per Student</Label>
-              <Input
-                type="number"
-                min="1"
-                value={questionsPerStudent}
-                onChange={handleQuestionsChange}
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Display Language</Label>
-              <select
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value as "English" | "Chinese")}
-              >
-                <option value="English">English</option>
-                <option value="Chinese">Chinese</option>
-              </select>
-            </div>
+            <GameSettings
+              questionsPerStudent={questionsPerStudent}
+              onQuestionsChange={handleQuestionsChange}
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
+            />
 
             <DifficultySelect
               selectedCategories={selectedCategories}
@@ -179,4 +154,3 @@ const PreMatchSetup = () => {
 };
 
 export default PreMatchSetup;
-
