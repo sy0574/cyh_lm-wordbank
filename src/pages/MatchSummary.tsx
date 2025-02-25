@@ -61,6 +61,11 @@ const MatchSummary = () => {
     stats.name === students.find(s => s.id === selectedStudentId)?.name
   );
 
+  // 根据所选班级筛选排名数据
+  const filteredRankings = getRankings().filter(ranking => 
+    selectedClass === "all" || ranking.student.class === selectedClass
+  );
+
   const handleSaveReport = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -101,11 +106,10 @@ const MatchSummary = () => {
           difficulty={difficulty}
         />
       }
-      sideContent={<Rankings rankings={getRankings()} />}
+      sideContent={<Rankings rankings={filteredRankings} />}
       actions={<MatchActions onSaveReport={handleSaveReport} />}
     />
   );
 };
 
 export default MatchSummary;
-

@@ -1,7 +1,6 @@
 
 import { Student } from "@/types/match";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { getStudentsByClass } from "@/utils/databaseQueries";
@@ -22,11 +21,11 @@ const StudentSelector = ({ selectedClass, selectedStudentId, setSelectedStudentI
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         <Label>Select Student</Label>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="w-32 h-12 bg-muted animate-pulse rounded-lg" />
+            <div key={i} className="h-8 bg-muted animate-pulse rounded-md" />
           ))}
         </div>
       </div>
@@ -34,27 +33,22 @@ const StudentSelector = ({ selectedClass, selectedStudentId, setSelectedStudentI
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Label>Select Student</Label>
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-2">
         {students.map((student) => (
           <button
             key={student.id}
             onClick={() => setSelectedStudentId(student.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+              "px-3 py-1.5 text-sm rounded-md transition-all text-center",
               "hover:bg-accent/50",
-              "border-2",
               selectedStudentId === student.id
-                ? "border-accent bg-accent/10"
-                : "border-transparent bg-accent/5"
+                ? "bg-accent/10 border-2 border-accent"
+                : "bg-accent/5 border-2 border-transparent"
             )}
           >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={`https://api.dicebear.com/7.x/bottts/svg?seed=${student.name}`} alt={student.name} />
-              <AvatarFallback>{student.name[0]}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium">{student.name}</span>
+            {student.name}
           </button>
         ))}
       </div>
