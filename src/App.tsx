@@ -10,9 +10,9 @@ import MatchSummary from "./pages/MatchSummary";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import { UserNav } from "./components/UserNav";
 import * as React from 'react';
 import { supabase } from "./integrations/supabase/client";
+import { Navbar } from "./components/Navbar";
 
 function App() {
   const queryClient = React.useRef(new QueryClient());
@@ -39,19 +39,19 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          {isAuthenticated && (
-            <div className="fixed top-4 right-4 z-50">
-              <UserNav />
+          <div className="min-h-screen">
+            <Navbar isAuthenticated={isAuthenticated} />
+            <div className="container pt-16">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/setup" element={<PreMatchSetup />} />
+                <Route path="/match-arena" element={<MatchArena />} />
+                <Route path="/match-summary" element={<MatchSummary />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </div>
-          )}
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/setup" element={<PreMatchSetup />} />
-            <Route path="/match-arena" element={<MatchArena />} />
-            <Route path="/match-summary" element={<MatchSummary />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
