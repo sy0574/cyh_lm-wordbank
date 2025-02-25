@@ -10,11 +10,27 @@ import MatchSummary from "./pages/MatchSummary";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { UserNav } from "./components/UserNav";
 import * as React from 'react';
 
 function App() {
-  // Create QueryClient instance inside component using useRef instead of useState
   const queryClient = React.useRef(new QueryClient());
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  React.useEffect(() => {
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Check initial auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Cleanup subscription
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient.current}>
@@ -22,6 +38,11 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          {isAuthenticated && (
+            <div className="fixed top-4 right-4 z-50">
+              <UserNav />
+            </div>
+          )}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -37,4 +58,3 @@ function App() {
 }
 
 export default App;
-
