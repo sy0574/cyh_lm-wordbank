@@ -9,8 +9,6 @@ import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
 import { useMatchFeedback } from "@/hooks/useMatchFeedback";
 import { useMatchResults } from "@/hooks/useMatchResults";
-import { MatchProgress } from "@/components/match-arena/MatchProgress";
-import { FeedbackDisplay } from "@/components/match-arena/FeedbackDisplay";
 import { MAX_TIME } from "@/utils/scoring";
 import { toast } from "@/components/ui/use-toast";
 
@@ -27,8 +25,7 @@ const MatchArena = () => {
     useMatchScoring(students);
   const { currentStudent, selectNextStudent, updateStudentAnswerCount, studentAnswerCounts } = 
     useStudentSelection(students, questionsPerStudent, score, [], null);
-  const { showFeedback, setShowFeedback, feedback, setFeedback, getStreakFeedback } = 
-    useMatchFeedback();
+  const { getStreakFeedback } = useMatchFeedback();
   const { results, showResultsPopup, setShowResultsPopup, isMatchComplete, setIsMatchComplete, saveResult } = 
     useMatchResults();
 
@@ -46,7 +43,6 @@ const MatchArena = () => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
 
     const responseTime = Date.now() - wordStartTime;
-    setShowFeedback(true);
     const correct = isCorrect;
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
@@ -59,11 +55,6 @@ const MatchArena = () => {
     }
     
     const streakFeedback = getStreakFeedback(correct);
-    setFeedback({
-      correct,
-      message: streakFeedback.message,
-      type: streakFeedback.type
-    });
 
     try {
       await saveResult(
@@ -77,7 +68,6 @@ const MatchArena = () => {
       );
 
       setTimeout(() => {
-        setShowFeedback(false);
         setShowPoints(false);
         
         if (shouldEnd) {
@@ -138,38 +128,27 @@ const MatchArena = () => {
         <Podium rankings={rankings} />
 
         {!showResultsPopup && currentStudent && (
-          <>
-            <WordDisplay
-              currentStudent={currentStudent}
-              word={wordList[currentWordIndex].word}
-              timeLeft={timeLeft}
-              maxTime={MAX_TIME}
-              potentialPoints={potentialPoints}
-              showPoints={showPoints}
-              earnedPoints={earnedPoints}
-              showFeedback={showFeedback}
-              feedback={feedback}
-              currentWordIndex={displayProgress}
-              totalQuestions={totalExpectedQuestions}
-              selectedLanguage={selectedLanguage}
-              chineseDefinition={wordList[currentWordIndex].chineseDefinition}
-              partOfSpeech={wordList[currentWordIndex].partOfSpeech}
-            />
-            <MatchProgress
-              currentStudent={currentStudent}
-              displayProgress={displayProgress}
-              totalExpectedQuestions={totalExpectedQuestions}
-            />
-            <FeedbackDisplay
-              showFeedback={showFeedback}
-              feedback={feedback}
-            />
-          </>
+          <WordDisplay
+            currentStudent={currentStudent}
+            word={wordList[currentWordIndex].word}
+            timeLeft={timeLeft}
+            maxTime={MAX_TIME}
+            potentialPoints={potentialPoints}
+            showPoints={showPoints}
+            earnedPoints={earnedPoints}
+            showFeedback={false}
+            feedback={{correct: false, message: "", type: undefined}}
+            currentWordIndex={displayProgress}
+            totalQuestions={totalExpectedQuestions}
+            selectedLanguage={selectedLanguage}
+            chineseDefinition={wordList[currentWordIndex].chineseDefinition}
+            partOfSpeech={wordList[currentWordIndex].partOfSpeech}
+          />
         )}
 
         <AnswerButtons
           onAnswer={handleAnswer}
-          disabled={showFeedback || isMatchComplete}
+          disabled={isMatchComplete}
           showResultsPopup={showResultsPopup}
           onViewResults={handleViewResults}
         />
@@ -179,3 +158,4 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
+

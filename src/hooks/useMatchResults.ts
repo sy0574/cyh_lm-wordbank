@@ -61,16 +61,9 @@ export const useMatchResults = () => {
       };
 
       setResults(prev => [...prev, newResult]);
-      
-      toast({
-        title: "Success",
-        description: "Match result saved successfully",
-        variant: "default",
-      });
     } catch (error) {
       console.error('Error saving match result:', error);
       
-      // Show a more specific error message to the user
       toast({
         title: "Error",
         description: error instanceof Error 
@@ -79,7 +72,6 @@ export const useMatchResults = () => {
         variant: "destructive",
       });
 
-      // Rethrow the error so the calling code can handle it if needed
       throw error;
     }
   };
