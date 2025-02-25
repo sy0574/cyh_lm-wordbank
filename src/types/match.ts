@@ -3,6 +3,7 @@ export interface Student {
   id: string;
   name: string;
   avatar: string;
+  category?: string;
 }
 
 export interface MatchResult {
@@ -41,3 +42,4 @@ export interface Feedback {
   message: string;
   type?: 'streak' | 'warning' | 'normal';
 }
+

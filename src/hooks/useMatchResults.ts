@@ -26,7 +26,7 @@ export const useMatchResults = () => {
         response_time: Math.round(responseTime),
         points_earned: Math.round(pointsEarned),
         answer_number: answerNumber,
-        category
+        difficulty: category // Map category to difficulty field for database compatibility
       };
 
       console.log('Attempting to save match result with payload:', payload);
@@ -72,3 +72,4 @@ export const useMatchResults = () => {
     saveResult
   };
 };
+
