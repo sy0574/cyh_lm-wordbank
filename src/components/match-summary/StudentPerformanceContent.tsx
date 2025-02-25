@@ -71,12 +71,20 @@ const StudentPerformanceContent = ({
         <TabsContent value="current">
           <Card>
             <CardContent className="space-y-6 pt-6">
-              <PerformanceMetrics
-                percentage={percentage}
-                averageResponseTime={selectedStatsData?.averageResponseTime || 0}
-              />
-              <PerformanceCharts data={scoreData} />
-              <PerformanceDetails words={selectedStatsData?.words || []} />
+              {!selectedStatsData ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无数据
+                </div>
+              ) : (
+                <>
+                  <PerformanceMetrics
+                    percentage={percentage}
+                    averageResponseTime={selectedStatsData.averageResponseTime}
+                  />
+                  <PerformanceCharts data={scoreData} />
+                  <PerformanceDetails words={selectedStatsData.words} />
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -84,7 +92,11 @@ const StudentPerformanceContent = ({
           <Card>
             <CardContent className="space-y-6 pt-6">
               <TimeFilter value={timeFilter} onChange={setTimeFilter} />
-              {selectedStatsData && (
+              {!selectedStatsData ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无历史数据
+                </div>
+              ) : (
                 <>
                   <PerformanceMetrics
                     percentage={percentage}

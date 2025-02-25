@@ -21,36 +21,44 @@ const Rankings = ({ rankings }: RankingsProps) => {
       <h3 className="text-lg font-semibold">班级排名</h3>
       <ScrollArea className="h-[calc(100vh-300px)]">
         <div className="grid gap-3 pr-4">
-          {rankings.map((entry, index) => (
-            <Card key={entry.student.id} className="p-4">
-              <div className="flex items-center gap-4">
-                <div className={`flex-none flex items-center justify-center w-8 h-8 rounded-full font-bold
-                  ${index === 0 ? 'bg-yellow-100 text-yellow-600' :
-                    index === 1 ? 'bg-gray-100 text-gray-600' :
-                      index === 2 ? 'bg-orange-100 text-orange-600' :
-                        'bg-accent/10 text-accent'}`}>
-                  {index + 1}
-                </div>
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={entry.student.avatar} alt={entry.student.name} />
-                  <AvatarFallback>{entry.student.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                  <div className="font-medium">{entry.student.name}</div>
-                  <div className="text-sm text-muted-foreground flex items-center gap-4">
-                    <span className="flex items-center gap-1">
-                      <Trophy className="w-4 h-4" />
-                      {entry.score}分
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Timer className="w-4 h-4" />
-                      {entry.averageResponseTime}ms
-                    </span>
-                  </div>
-                </div>
+          {rankings.length === 0 ? (
+            <Card className="p-4">
+              <div className="text-center text-muted-foreground">
+                暂无排名数据
               </div>
             </Card>
-          ))}
+          ) : (
+            rankings.map((entry, index) => (
+              <Card key={entry.student.id} className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className={`flex-none flex items-center justify-center w-8 h-8 rounded-full font-bold
+                    ${index === 0 ? 'bg-yellow-100 text-yellow-600' :
+                      index === 1 ? 'bg-gray-100 text-gray-600' :
+                        index === 2 ? 'bg-orange-100 text-orange-600' :
+                          'bg-accent/10 text-accent'}`}>
+                    {index + 1}
+                  </div>
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={entry.student.avatar} alt={entry.student.name} />
+                    <AvatarFallback>{entry.student.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-grow">
+                    <div className="font-medium">{entry.student.name}</div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-4">
+                      <span className="flex items-center gap-1">
+                        <Trophy className="w-4 h-4" />
+                        {entry.score}分
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Timer className="w-4 h-4" />
+                        {entry.averageResponseTime}ms
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </ScrollArea>
     </div>

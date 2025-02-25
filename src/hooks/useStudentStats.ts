@@ -31,22 +31,26 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
   };
 
   const processMatchHistory = (data: any[]): StudentStats[] => {
+    const relevantStudents = students.filter(
+      student => selectedClass === "all" || student.class === selectedClass
+    );
+
     const formattedResults: MatchResult[] = data.map(result => ({
       word: result.word,
       correct: result.correct,
       student: {
-        ...students.find(s => s.id === result.student_id)!,
+        ...relevantStudents.find(s => s.id === result.student_id)!,
         avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`
       },
       responseTime: result.response_time,
       pointsEarned: result.points_earned,
       answerNumber: result.answer_number,
       answeredAt: new Date(result.answered_at)
-    }));
+    })).filter(result => result.student); // Only keep results where we found a matching student
 
     const filteredResults = filterResultsByTime(formattedResults);
 
-    return students.map((student) => {
+    return relevantStudents.map((student) => {
       const studentResults = filteredResults.filter((r) => r.student.id === student.id);
       const correct = studentResults.filter((r) => r.correct).length;
       const totalResponseTime = studentResults.reduce(
@@ -76,14 +80,21 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
   };
 
   const { data: studentStats = [], isLoading: loading } = useQuery({
-    queryKey: ['matchHistory', selectedClass, students.map(s => s.id).join(','), timeFilter],
+    queryKey: ['matchHistory', selectedClass, timeFilter],
     queryFn: async () => {
       try {
-        const studentIds = students.map(s => s.id);
+        const relevantStudentIds = students
+          .filter(s => selectedClass === "all" || s.class === selectedClass)
+          .map(s => s.id);
+
+        if (relevantStudentIds.length === 0) {
+          return [];
+        }
+
         const { data, error } = await supabase
           .from('match_history')
           .select('*')
-          .in('student_id', studentIds);
+          .in('student_id', relevantStudentIds);
 
         if (error) {
           throw error;
