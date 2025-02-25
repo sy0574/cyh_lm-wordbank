@@ -101,8 +101,8 @@ export const useStudentStats = (students: Student[]) => {
       }
     },
     enabled: students.length > 0,
-    staleTime: 1000 * 60 * 5, // 缓存5分钟
-    cacheTime: 1000 * 60 * 30, // 数据在缓存中保留30分钟
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep in garbage collection for 30 minutes
   });
 
   return {
@@ -112,3 +112,4 @@ export const useStudentStats = (students: Student[]) => {
     loading
   };
 };
+
