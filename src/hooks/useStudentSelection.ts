@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Student, MatchResult } from "@/types/match";
 import { useNavigate } from "react-router-dom";
@@ -20,77 +19,53 @@ export const useStudentSelection = (
     console.log("Attempting to announce student:", student.name);
 
     if (!('speechSynthesis' in window)) {
-      console.error("Browser does not support speech synthesis");
-      toast({
-        title: "TTS Error",
-        description: "Your browser does not support text-to-speech",
-        variant: "destructive",
-      });
+      console.warn("Browser does not support speech synthesis");
       return;
     }
 
     try {
-      // Cancel any ongoing speech and wait a moment
+      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Create new utterance
+      // Create and configure utterance
       const utterance = new SpeechSynthesisUtterance(student.name);
       
       // Get available voices
-      let voices = window.speechSynthesis.getVoices();
+      let voices = speechSynthesis.getVoices();
       
-      // If voices aren't loaded yet, wait for them
+      // Wait for voices to load if needed
       if (voices.length === 0) {
-        voices = await new Promise((resolve) => {
-          const onVoicesChanged = () => {
-            window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
-            resolve(window.speechSynthesis.getVoices());
+        await new Promise<SpeechSynthesisVoice[]>((resolve) => {
+          const voicesChangedHandler = () => {
+            voices = speechSynthesis.getVoices();
+            speechSynthesis.removeEventListener('voiceschanged', voicesChangedHandler);
+            resolve(voices);
           };
-          window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+          speechSynthesis.addEventListener('voiceschanged', voicesChangedHandler);
         });
       }
 
-      // Find an English voice
-      const englishVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && voice.localService
-      ) || voices[0];
+      // Try to find a suitable English voice
+      const preferredVoice = voices.find(voice => 
+        voice.lang.includes('en') && !voice.name.includes('Test')
+      );
 
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
       }
 
-      // Configure utterance
-      utterance.rate = 0.8;
+      // Configure speech parameters
+      utterance.rate = 0.9;  // Slightly slower
       utterance.pitch = 1;
       utterance.volume = 1;
-      utterance.lang = 'en-US';
 
-      // Add event handlers
-      utterance.onstart = () => console.log("Started speaking:", student.name);
-      utterance.onend = () => console.log("Finished speaking:", student.name);
-      utterance.onerror = (event) => {
-        console.error("Speech synthesis error:", event);
-        if (event.error !== 'canceled') {  // Ignore canceled errors
-          toast({
-            title: "TTS Error",
-            description: "Failed to announce student name",
-            variant: "destructive",
-          });
-        }
-      };
-
-      // Speak the name
       console.log("Speaking:", student.name);
       window.speechSynthesis.speak(utterance);
 
     } catch (error) {
-      console.error("TTS error:", error);
-      toast({
-        title: "TTS Error",
-        description: "Failed to announce student name",
-        variant: "destructive",
-      });
+      console.warn("Speech synthesis error:", error);
+      // Don't show toast for speech errors - non-critical feature
     }
   };
 
@@ -106,12 +81,10 @@ export const useStudentSelection = (
       return null;
     }
 
-    // Filter out students who have completed all their questions
     const availableStudents = students.filter(student => 
       (studentAnswerCounts[student.id] || 0) < questionsPerStudent
     );
 
-    // If there's only one student left, they must be selected regardless
     if (availableStudents.length === 1) {
       const selectedStudent = availableStudents[0];
       setCurrentStudent(selectedStudent);
@@ -120,12 +93,10 @@ export const useStudentSelection = (
       return selectedStudent;
     }
 
-    // Filter out the last selected student to prevent consecutive selections
     const eligibleStudents = availableStudents.filter(
       student => student.id !== lastSelectedStudentId
     );
 
-    // Randomly select from eligible students
     const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
     const selectedStudent = eligibleStudents[randomIndex];
 
@@ -142,7 +113,7 @@ export const useStudentSelection = (
   };
 
   const updateStudentAnswerCount = (studentId: string): number => {
-    let newCount = (studentAnswerCounts[studentId] || 0) + 1;
+    const newCount = (studentAnswerCounts[studentId] || 0) + 1;
     if (newCount <= questionsPerStudent) {
       setStudentAnswerCounts(prev => ({
         ...prev,
