@@ -78,42 +78,6 @@ export type Database = {
         }
         Relationships: []
       }
-      learning_patterns: {
-        Row: {
-          average_response_time: number | null
-          average_score: number
-          created_at: string | null
-          day_of_week: number
-          hour_of_day: number
-          id: string
-          student_id: string
-          total_words_attempted: number
-          updated_at: string | null
-        }
-        Insert: {
-          average_response_time?: number | null
-          average_score: number
-          created_at?: string | null
-          day_of_week: number
-          hour_of_day: number
-          id?: string
-          student_id: string
-          total_words_attempted: number
-          updated_at?: string | null
-        }
-        Update: {
-          average_response_time?: number | null
-          average_score?: number
-          created_at?: string | null
-          day_of_week?: number
-          hour_of_day?: number
-          id?: string
-          student_id?: string
-          total_words_attempted?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_seed: string | null
