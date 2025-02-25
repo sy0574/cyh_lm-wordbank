@@ -200,18 +200,21 @@ export type Database = {
       }
       students: {
         Row: {
+          avatar: string | null
           class: string
           created_at: string
           id: string
           name: string
         }
         Insert: {
+          avatar?: string | null
           class: string
           created_at?: string
           id: string
           name: string
         }
         Update: {
+          avatar?: string | null
           class?: string
           created_at?: string
           id?: string
