@@ -78,6 +78,57 @@ export type Database = {
         }
         Relationships: []
       }
+      match_history: {
+        Row: {
+          answer_number: number
+          answered_at: string | null
+          correct: boolean
+          difficulty: string
+          id: string
+          points_earned: number
+          response_time: number
+          student_id: string
+          word: string
+        }
+        Insert: {
+          answer_number: number
+          answered_at?: string | null
+          correct: boolean
+          difficulty: string
+          id?: string
+          points_earned: number
+          response_time: number
+          student_id: string
+          word: string
+        }
+        Update: {
+          answer_number?: number
+          answered_at?: string | null
+          correct?: boolean
+          difficulty?: string
+          id?: string
+          points_earned?: number
+          response_time?: number
+          student_id?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_history_student_id_fkey1"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_seed: string | null

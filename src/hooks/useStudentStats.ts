@@ -1,10 +1,53 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Student, StudentStats, MatchResult } from "@/types/match";
 import { TIME_FILTERS, TimeFilter } from "@/components/match-summary/TimeFilter";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 export const useStudentStats = (students: Student[], results: MatchResult[]) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(TIME_FILTERS.ALL);
+  const [historicalResults, setHistoricalResults] = useState<MatchResult[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistoricalData = async () => {
+      try {
+        const studentIds = students.map(s => s.id);
+        const { data, error } = await supabase
+          .from('match_history')
+          .select('*')
+          .in('student_id', studentIds);
+
+        if (error) {
+          throw error;
+        }
+
+        const formattedResults: MatchResult[] = data.map(result => ({
+          word: result.word,
+          correct: result.correct,
+          student: students.find(s => s.id === result.student_id)!,
+          responseTime: result.response_time,
+          pointsEarned: result.points_earned,
+          answerNumber: result.answer_number,
+          answeredAt: new Date(result.answered_at)
+        }));
+
+        setHistoricalResults(formattedResults);
+      } catch (error) {
+        console.error('Error fetching historical data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load historical match data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading = false;
+      }
+    };
+
+    fetchHistoricalData();
+  }, [students]);
 
   const filterResultsByTime = (results: MatchResult[]) => {
     const now = new Date();
@@ -27,9 +70,12 @@ export const useStudentStats = (students: Student[], results: MatchResult[]) => 
     });
   };
 
+  // Combine current session results with historical results
+  const allResults = [...results, ...historicalResults];
+
   const studentStats: StudentStats[] = students.map((student) => {
     const studentResults = filterResultsByTime(
-      results.filter((r) => r.student.id === student.id)
+      allResults.filter((r) => r.student.id === student.id)
     );
     const correct = studentResults.filter((r) => r.correct).length;
     const totalResponseTime = studentResults.reduce(
@@ -61,6 +107,6 @@ export const useStudentStats = (students: Student[], results: MatchResult[]) => 
     studentStats,
     timeFilter,
     setTimeFilter,
+    loading
   };
 };
-

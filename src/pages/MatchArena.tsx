@@ -8,6 +8,7 @@ import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
 import { MAX_TIME } from "@/utils/scoring";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/utils/supabase";
 
 const MatchArena = () => {
   const location = useLocation();
@@ -100,6 +101,29 @@ const MatchArena = () => {
       message: streakFeedback.message,
       type: streakFeedback.type
     });
+
+    try {
+      const { error } = await supabase
+        .from('match_history')
+        .insert({
+          student_id: currentStudent.id,
+          word: wordList[currentWordIndex].word,
+          correct,
+          response_time: responseTime,
+          points_earned: pointsEarned,
+          answer_number: results.filter(r => r.student.id === currentStudent.id).length + 1,
+          difficulty
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving match result:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save match result",
+        variant: "destructive",
+      });
+    }
 
     const newResult = { 
       word: wordList[currentWordIndex].word,

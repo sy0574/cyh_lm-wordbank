@@ -18,7 +18,7 @@ const MatchSummary = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("");
 
-  const { studentStats, timeFilter, setTimeFilter } = useStudentStats(students, results);
+  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students, results);
   const { getRankings } = useRankings(studentStats, students);
 
   useEffect(() => {
@@ -44,6 +44,14 @@ const MatchSummary = () => {
 
   if (!location.state || students.length === 0) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-accent"></div>
+      </div>
+    );
   }
 
   const selectedStatsData = studentStats.find(stats => 
