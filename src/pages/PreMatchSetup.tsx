@@ -22,6 +22,7 @@ const PreMatchSetup = () => {
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(5);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<"English" | "Chinese">("English");
   const classes = getUniqueClasses();
 
   const generateAvatar = (seed: string) => {
@@ -107,7 +108,8 @@ const PreMatchSetup = () => {
         students: selectedStudents,
         wordList: filteredWords,
         categories: selectedCategories,
-        questionsPerStudent 
+        questionsPerStudent,
+        selectedLanguage
       } 
     });
   };
@@ -150,6 +152,18 @@ const PreMatchSetup = () => {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Display Language</Label>
+              <select
+                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value as "English" | "Chinese")}
+              >
+                <option value="English">English</option>
+                <option value="Chinese">Chinese</option>
+              </select>
+            </div>
+
             <DifficultySelect
               selectedCategories={selectedCategories}
               onCategoryChange={handleCategoryChange}
@@ -172,3 +186,4 @@ const PreMatchSetup = () => {
 };
 
 export default PreMatchSetup;
+

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
@@ -13,7 +12,7 @@ import { toast } from "@/components/ui/use-toast";
 const MatchArena = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { students, wordList, difficulty, questionsPerStudent } = location.state || {};
+  const { students, wordList, difficulty, questionsPerStudent, selectedLanguage } = location.state || {};
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
@@ -103,7 +102,6 @@ const MatchArena = () => {
 
   const handleViewResults = () => {
     try {
-      // First try navigating directly to match-summary
       navigate("/match-summary", {
         state: {
           students,
@@ -112,7 +110,7 @@ const MatchArena = () => {
           results,
           difficulty
         },
-        replace: true // Use replace to prevent going back to setup
+        replace: true
       });
     } catch (error) {
       console.error("Navigation error:", error);
@@ -151,6 +149,9 @@ const MatchArena = () => {
             feedback={feedback}
             currentWordIndex={displayProgress}
             totalQuestions={totalExpectedQuestions}
+            selectedLanguage={selectedLanguage}
+            chineseDefinition={wordList[currentWordIndex].chineseDefinition}
+            partOfSpeech={wordList[currentWordIndex].partOfSpeech}
           />
         )}
 
@@ -166,4 +167,3 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
-
