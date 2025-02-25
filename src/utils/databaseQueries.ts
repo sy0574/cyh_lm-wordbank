@@ -5,14 +5,19 @@ export const getUniqueClasses = async () => {
   const { data, error } = await supabase
     .from('students')
     .select('class')
-    .distinct();
+    .then(result => {
+      if (result.error) throw result.error;
+      // Get unique classes using Set
+      const uniqueClasses = [...new Set(result.data.map(item => item.class))];
+      return { data: uniqueClasses, error: null };
+    });
 
   if (error) {
     console.error('Error fetching classes:', error);
     return [];
   }
 
-  return data.map(item => item.class);
+  return data;
 };
 
 export const getStudentsByClass = async (className: string) => {

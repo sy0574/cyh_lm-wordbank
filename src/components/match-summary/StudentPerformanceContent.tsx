@@ -2,7 +2,7 @@
 import { useState } from "react";
 import StudentSelector from "./StudentSelector";
 import ClassSelector from "./ClassSelector";
-import TimeFilter from "./TimeFilter";
+import TimeFilter, { TimeFilter as TimeFilterType, TIME_FILTERS } from "./TimeFilter";
 import PerformanceMetrics from "./PerformanceMetrics";
 import PerformanceCharts from "./PerformanceCharts";
 import PerformanceDetails from "./PerformanceDetails";
@@ -13,8 +13,8 @@ interface StudentPerformanceContentProps {
   selectedStudentId: string | undefined;
   setSelectedStudentId: (id: string) => void;
   setSelectedClass: (className: string) => void;
-  timeFilter: string;
-  setTimeFilter: (filter: any) => void;
+  timeFilter: TimeFilterType;
+  setTimeFilter: (filter: TimeFilterType) => void;
   selectedStatsData: StudentStats | undefined;
   difficulty: string;
 }
