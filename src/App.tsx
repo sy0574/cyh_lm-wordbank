@@ -10,14 +10,14 @@ import MatchSummary from "./pages/MatchSummary";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import { useState } from "react";
+import * as React from 'react';
 
-const App = () => {
-  // Move QueryClient instantiation inside the component and use useState to maintain instance
-  const [queryClient] = useState(() => new QueryClient());
+function App() {
+  // Create QueryClient instance inside component using useRef instead of useState
+  const queryClient = React.useRef(new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient.current}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -34,6 +34,7 @@ const App = () => {
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
+
