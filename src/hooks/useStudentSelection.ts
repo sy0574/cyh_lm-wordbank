@@ -17,19 +17,22 @@ export const useStudentSelection = (
   const [lastSelectedStudentId, setLastSelectedStudentId] = useState<string | null>(null);
 
   const announceStudent = async (student: Student) => {
-    try {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const speech = new SpeechSynthesisUtterance(student.name + "'s turn");
-        speech.rate = 0.8;
-        speech.pitch = 1;
-        window.speechSynthesis.speak(speech);
-      }
-    } catch (error) {
-      console.error("TTS error:", error);
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Create new utterance with just the student's name
+      const utterance = new SpeechSynthesisUtterance(student.name);
+      utterance.rate = 0.8;
+      utterance.pitch = 1;
+
+      // Speak the name
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error("Browser does not support speech synthesis");
       toast({
         title: "TTS Error",
-        description: "Could not announce student name",
+        description: "Your browser does not support text-to-speech",
         variant: "destructive",
       });
     }
