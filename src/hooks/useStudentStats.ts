@@ -31,16 +31,23 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
   };
 
   const processMatchHistory = (data: any[]): StudentStats[] => {
+    // Get all students from the selected class or all students if 'all' is selected
     const relevantStudents = students.filter(
       student => selectedClass === "all" || student.class === selectedClass
     );
 
+    console.log('Processing match history for students:', relevantStudents);
+    console.log('Selected class:', selectedClass);
+    console.log('Raw match history data:', data);
+
     const formattedResults: MatchResult[] = data.map(result => ({
       word: result.word,
       correct: result.correct,
-      student: {
-        ...relevantStudents.find(s => s.id === result.student_id)!,
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`
+      student: relevantStudents.find(s => s.id === result.student_id) || {
+        id: result.student_id,
+        name: 'Unknown',
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${result.student_id}`,
+        class: ''
       },
       responseTime: result.response_time,
       pointsEarned: result.points_earned,
@@ -49,6 +56,7 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     })).filter(result => result.student); // Only keep results where we found a matching student
 
     const filteredResults = filterResultsByTime(formattedResults);
+    console.log('Filtered results:', filteredResults);
 
     return relevantStudents.map((student) => {
       const studentResults = filteredResults.filter((r) => r.student.id === student.id);
@@ -83,23 +91,29 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     queryKey: ['matchHistory', selectedClass, timeFilter],
     queryFn: async () => {
       try {
-        const relevantStudentIds = students
+        // Get student IDs for the selected class
+        const studentIds = students
           .filter(s => selectedClass === "all" || s.class === selectedClass)
           .map(s => s.id);
 
-        if (relevantStudentIds.length === 0) {
+        console.log('Fetching match history for student IDs:', studentIds);
+        
+        if (studentIds.length === 0) {
+          console.log('No students found for class:', selectedClass);
           return [];
         }
 
         const { data, error } = await supabase
           .from('match_history')
           .select('*')
-          .in('student_id', relevantStudentIds);
+          .in('student_id', studentIds);
 
         if (error) {
+          console.error('Error fetching match history:', error);
           throw error;
         }
 
+        console.log(`Found ${data?.length || 0} match history records`);
         return processMatchHistory(data || []);
       } catch (error) {
         console.error('Error fetching match history:', error);
