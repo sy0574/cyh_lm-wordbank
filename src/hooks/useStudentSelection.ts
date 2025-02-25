@@ -12,9 +12,9 @@ export const useStudentSelection = (
   difficulty: string
 ) => {
   const navigate = useNavigate();
-  const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [studentAnswerCounts, setStudentAnswerCounts] = useState<Record<string, number>>({});
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [lastSelectedStudentId, setLastSelectedStudentId] = useState<string | null>(null);
 
   const announceStudent = async (student: Student) => {
     try {
@@ -47,26 +47,28 @@ export const useStudentSelection = (
       return null;
     }
 
-    let nextStudentIndex = currentStudentIndex;
-    let attempts = 0;
-    let selectedStudent: Student | null = null;
+    // Filter out students who have completed all their questions
+    const availableStudents = students.filter(student => 
+      (studentAnswerCounts[student.id] || 0) < questionsPerStudent
+    );
 
-    while (attempts < students.length && !selectedStudent) {
-      if (nextStudentIndex >= students.length) {
-        nextStudentIndex = 0;
-      }
-
-      const candidateStudent = students[nextStudentIndex];
-      const studentQuestionCount = studentAnswerCounts[candidateStudent.id] || 0;
-
-      if (studentQuestionCount < questionsPerStudent) {
-        selectedStudent = candidateStudent;
-        break;
-      }
-
-      nextStudentIndex++;
-      attempts++;
+    // If there's only one student left, they must be selected regardless
+    if (availableStudents.length === 1) {
+      const selectedStudent = availableStudents[0];
+      setCurrentStudent(selectedStudent);
+      setLastSelectedStudentId(selectedStudent.id);
+      announceStudent(selectedStudent);
+      return selectedStudent;
     }
+
+    // Filter out the last selected student to prevent consecutive selections
+    const eligibleStudents = availableStudents.filter(
+      student => student.id !== lastSelectedStudentId
+    );
+
+    // Randomly select from eligible students
+    const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
+    const selectedStudent = eligibleStudents[randomIndex];
 
     if (!selectedStudent) {
       setCurrentStudent(null);
@@ -74,7 +76,7 @@ export const useStudentSelection = (
     }
 
     setCurrentStudent(selectedStudent);
-    setCurrentStudentIndex(nextStudentIndex + 1);
+    setLastSelectedStudentId(selectedStudent.id);
     announceStudent(selectedStudent);
 
     return selectedStudent;
@@ -99,3 +101,4 @@ export const useStudentSelection = (
     studentAnswerCounts
   };
 };
+
