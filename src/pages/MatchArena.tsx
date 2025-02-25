@@ -53,7 +53,6 @@ const MatchArena = () => {
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
     
-    // Update student answer count and check if match should end
     const currentAnswerCount = updateStudentAnswerCount(currentStudent.id);
     const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
     const shouldEnd = totalAnswers + 1 >= students.length * questionsPerStudent;
@@ -104,30 +103,7 @@ const MatchArena = () => {
 
   const handleViewResults = () => {
     try {
-      const newWindow = window.open("/match-summary", "_blank");
-      
-      if (!newWindow) {
-        // Pop-up was blocked
-        toast({
-          title: "Pop-up Blocked",
-          description: "Please allow pop-ups for this site to open the preview in a new tab. You can also click 'View Results' again to try in the same tab.",
-          variant: "destructive",
-        });
-        
-        // Fallback: navigate in same tab
-        navigate("/match-summary", {
-          state: {
-            students,
-            score,
-            total: results.length,
-            results,
-            difficulty
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Fallback to same-tab navigation
+      // First try navigating directly to match-summary
       navigate("/match-summary", {
         state: {
           students,
@@ -135,7 +111,15 @@ const MatchArena = () => {
           total: results.length,
           results,
           difficulty
-        }
+        },
+        replace: true // Use replace to prevent going back to setup
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast({
+        title: "Navigation Error",
+        description: "Unable to navigate to results page. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -182,3 +166,4 @@ const MatchArena = () => {
 };
 
 export default MatchArena;
+
