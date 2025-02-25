@@ -1,27 +1,15 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
-import StudentSelector from "@/components/match-summary/StudentSelector";
-import PerformanceMetrics from "@/components/match-summary/PerformanceMetrics";
-import PerformanceCharts from "@/components/match-summary/PerformanceCharts";
-import PerformanceDetails from "@/components/match-summary/PerformanceDetails";
-import ClassSelector from "@/components/match-summary/ClassSelector";
-import Rankings from "@/components/match-summary/Rankings";
-import MatchHeader from "@/components/match-summary/MatchHeader";
-import MatchActions from "@/components/match-summary/MatchActions";
-import TimeFilter from "@/components/match-summary/TimeFilter";
-import { generateReportHtml } from "@/utils/reportGenerator";
 import { useStudentStats } from "@/hooks/useStudentStats";
 import { useRankings } from "@/hooks/useRankings";
-
-const getFeedback = (percentage: number) => {
-  if (percentage >= 90) return "Outstanding performance!";
-  if (percentage >= 70) return "Good job!";
-  if (percentage >= 50) return "Keep practicing!";
-  return "More practice needed";
-};
+import MatchLayout from "@/components/match-summary/MatchLayout";
+import MatchHeader from "@/components/match-summary/MatchHeader";
+import MatchActions from "@/components/match-summary/MatchActions";
+import Rankings from "@/components/match-summary/Rankings";
+import StudentPerformanceContent from "@/components/match-summary/StudentPerformanceContent";
+import { generateReportHtml } from "@/utils/reportGenerator";
 
 const MatchSummary = () => {
   const location = useLocation();
@@ -61,15 +49,6 @@ const MatchSummary = () => {
   const selectedStatsData = studentStats.find(stats => 
     stats.name === students.find(s => s.id === selectedStudentId)?.name
   );
-  
-  const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
-
-  const scoreData = selectedStatsData?.words.map(result => ({
-    answerNumber: result.answerNumber,
-    score: result.pointsEarned,
-    responseTime: result.responseTime,
-    answeredAt: result.answeredAt
-  })) || [];
 
   const handleSaveReport = () => {
     const printWindow = window.open('', '_blank');
@@ -97,61 +76,24 @@ const MatchSummary = () => {
   };
 
   return (
-    <div className="container max-w-[90rem] mx-auto py-12 px-4">
-      <div className="space-y-8 slide-up">
-        <MatchHeader />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="p-6">
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                  <StudentSelector
-                    selectedClass={selectedClass}
-                    selectedStudentId={selectedStudentId}
-                    setSelectedStudentId={setSelectedStudentId}
-                    difficulty={difficulty}
-                  />
-                  <ClassSelector
-                    selectedClass={selectedClass}
-                    onClassChange={setSelectedClass}
-                  />
-                </div>
-
-                <TimeFilter value={timeFilter} onChange={setTimeFilter} />
-
-                {selectedStatsData && (
-                  <>
-                    <PerformanceMetrics
-                      percentage={percentage}
-                      averageResponseTime={selectedStatsData.averageResponseTime}
-                    />
-
-                    <PerformanceCharts data={scoreData} />
-
-                    <PerformanceDetails words={selectedStatsData.words} />
-
-                    <div className="text-accent font-medium text-center">
-                      {getFeedback(percentage)}
-                    </div>
-                  </>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1">
-            <Card className="p-6">
-              <Rankings rankings={getRankings()} />
-            </Card>
-          </div>
-        </div>
-
-        <MatchActions onSaveReport={handleSaveReport} />
-      </div>
-    </div>
+    <MatchLayout
+      header={<MatchHeader />}
+      mainContent={
+        <StudentPerformanceContent
+          selectedClass={selectedClass}
+          selectedStudentId={selectedStudentId}
+          setSelectedStudentId={setSelectedStudentId}
+          setSelectedClass={setSelectedClass}
+          timeFilter={timeFilter}
+          setTimeFilter={setTimeFilter}
+          selectedStatsData={selectedStatsData}
+          difficulty={difficulty}
+        />
+      }
+      sideContent={<Rankings rankings={getRankings()} />}
+      actions={<MatchActions onSaveReport={handleSaveReport} />}
+    />
   );
 };
 
 export default MatchSummary;
-
