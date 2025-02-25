@@ -1,6 +1,5 @@
 
 import { Link } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
 import { UserNav } from "./UserNav";
 
 export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
@@ -15,18 +14,6 @@ export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
         </Link>
         
         {isAuthenticated && (
-          <div className="flex flex-1">
-            <Link
-              to="/dashboard"
-              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Dashboard
-            </Link>
-          </div>
-        )}
-
-        {isAuthenticated && (
           <div className="ml-auto">
             <UserNav />
           </div>
@@ -35,4 +22,3 @@ export function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
     </nav>
   );
 }
-
