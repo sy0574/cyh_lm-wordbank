@@ -88,11 +88,14 @@ const PreMatchSetup = () => {
       return;
     }
 
+    // Use the first selected category as the difficulty level
+    const difficulty = selectedCategories[0];
+
     navigate("/match-arena", { 
       state: { 
         students: selectedStudents,
         wordList: filteredWords,
-        categories: selectedCategories,
+        difficulty, // Pass the difficulty level
         questionsPerStudent,
         selectedLanguage
       } 
@@ -154,3 +157,4 @@ const PreMatchSetup = () => {
 };
 
 export default PreMatchSetup;
+
