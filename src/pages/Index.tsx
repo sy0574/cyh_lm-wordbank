@@ -1,7 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building, Globe, Rocket, Trophy, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Index() {
   return (
@@ -18,8 +18,8 @@ export default function Index() {
               Transform vocabulary learning into an engaging battle of knowledge. Perfect for students and educators seeking measurable results.
             </p>
             <div className="flex gap-4">
-              <Button size="lg" className="rounded-full">
-                Get Started
+              <Button size="lg" className="rounded-full" asChild>
+                <Link to="/auth">Get Started</Link>
               </Button>
               <Button variant="outline" size="lg" className="rounded-full">
                 Watch Demo
@@ -88,8 +88,8 @@ export default function Index() {
               <p className="max-w-2xl text-muted-foreground">
                 Join thousands of educators who have already revolutionized their English teaching methods with our platform.
               </p>
-              <Button size="lg" className="rounded-full">
-                Start Your Free Trial
+              <Button size="lg" className="rounded-full" asChild>
+                <Link to="/auth">Start Your Free Trial</Link>
               </Button>
             </CardContent>
           </Card>
