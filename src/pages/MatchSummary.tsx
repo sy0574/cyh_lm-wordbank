@@ -14,15 +14,16 @@ import { generateReportHtml } from "@/utils/reportGenerator";
 const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { students = [], difficulty = "medium" } = location.state || {};
+  const [students, setStudents] = useState([]);
+  const [difficulty, setDifficulty] = useState("medium");
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("");
 
-  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students);
-  const { getRankings } = useRankings(studentStats, students);
-
   useEffect(() => {
-    if (!location.state) {
+    console.log("Location state:", location.state);
+    
+    if (!location.state || !location.state.students || location.state.students.length === 0) {
+      console.log("Invalid state detected");
       toast({
         title: "Invalid Access",
         description: "Please start a new assessment from the home page.",
@@ -32,19 +33,17 @@ const MatchSummary = () => {
       return;
     }
 
-    if (students.length > 0 && !selectedStudentId) {
-      setSelectedStudentId(students[0].id);
-    }
+    setStudents(location.state.students);
+    setDifficulty(location.state.difficulty || "medium");
 
-    if (students.length > 0) {
-      const firstStudent = students[0];
-      setSelectedClass(firstStudent.class || "");
+    if (location.state.students.length > 0 && !selectedStudentId) {
+      setSelectedStudentId(location.state.students[0].id);
+      setSelectedClass(location.state.students[0].class || "");
     }
-  }, [location.state, students, selectedStudentId, navigate]);
+  }, [location.state, navigate, selectedStudentId]);
 
-  if (!location.state || students.length === 0) {
-    return null;
-  }
+  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students);
+  const { getRankings } = useRankings(studentStats, students);
 
   if (loading) {
     return (
@@ -52,6 +51,10 @@ const MatchSummary = () => {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-accent"></div>
       </div>
     );
+  }
+
+  if (!students || students.length === 0) {
+    return null;
   }
 
   const selectedStatsData = studentStats.find(stats => 
@@ -105,3 +108,4 @@ const MatchSummary = () => {
 };
 
 export default MatchSummary;
+

@@ -129,30 +129,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_seed: string | null
-          created_at: string | null
-          id: string
-          updated_at: string | null
-          username: string
-        }
-        Insert: {
-          avatar_seed?: string | null
-          created_at?: string | null
-          id: string
-          updated_at?: string | null
-          username: string
-        }
-        Update: {
-          avatar_seed?: string | null
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          username?: string
-        }
-        Relationships: []
-      }
       student_word_mastery: {
         Row: {
           average_response_time: number | null
@@ -219,27 +195,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          avatar_seed: string
-          created_at: string
-          id: string
-          username: string
-        }
-        Insert: {
-          avatar_seed: string
-          created_at?: string
-          id?: string
-          username: string
-        }
-        Update: {
-          avatar_seed?: string
-          created_at?: string
-          id?: string
-          username?: string
         }
         Relationships: []
       }
