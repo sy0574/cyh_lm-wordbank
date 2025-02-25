@@ -12,7 +12,7 @@ export interface MatchResult {
   responseTime: number;
   pointsEarned: number;
   answerNumber: number;
-  answeredAt?: Date;  // Added this field as optional
+  answeredAt?: Date;
 }
 
 export interface StudentScore {
@@ -36,3 +36,8 @@ export interface StudentStats {
   }>;
 }
 
+export interface Feedback {
+  correct: boolean;
+  message: string;
+  type?: 'streak' | 'warning' | 'normal';
+}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
@@ -6,9 +7,12 @@ import AnswerButtons from "@/components/AnswerButtons";
 import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useMatchScoring } from "@/hooks/useMatchScoring";
+import { useMatchFeedback } from "@/hooks/useMatchFeedback";
+import { useMatchResults } from "@/hooks/useMatchResults";
+import { MatchProgress } from "@/components/match-arena/MatchProgress";
+import { FeedbackDisplay } from "@/components/match-arena/FeedbackDisplay";
 import { MAX_TIME } from "@/utils/scoring";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/utils/supabase";
 
 const MatchArena = () => {
   const location = useLocation();
@@ -17,19 +21,16 @@ const MatchArena = () => {
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
-  const [results, setResults] = useState([]);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState({ correct: false, message: "", type: undefined });
-  const [showResultsPopup, setShowResultsPopup] = useState(false);
-  const [isMatchComplete, setIsMatchComplete] = useState(false);
-  const [correctStreak, setCorrectStreak] = useState(0);
-  const [incorrectStreak, setIncorrectStreak] = useState(0);
 
   const { timeLeft, potentialPoints } = useMatchTimer(wordStartTime);
   const { score, showPoints, setShowPoints, earnedPoints, updateScores, getRankings } = 
     useMatchScoring(students);
   const { currentStudent, selectNextStudent, updateStudentAnswerCount, studentAnswerCounts } = 
-    useStudentSelection(students, questionsPerStudent, score, results, difficulty);
+    useStudentSelection(students, questionsPerStudent, score, [], difficulty);
+  const { showFeedback, setShowFeedback, feedback, setFeedback, getStreakFeedback } = 
+    useMatchFeedback();
+  const { results, showResultsPopup, setShowResultsPopup, isMatchComplete, setIsMatchComplete, saveResult } = 
+    useMatchResults();
 
   useEffect(() => {
     if (!wordList || wordList.length === 0 || !students || students.length === 0) {
@@ -40,44 +41,6 @@ const MatchArena = () => {
     selectNextStudent();
   }, [wordList, students, navigate]);
 
-  const shouldEndMatch = () => {
-    const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
-    const requiredAnswers = students.length * questionsPerStudent;
-    return totalAnswers >= requiredAnswers;
-  };
-
-  const getStreakFeedback = (correct: boolean) => {
-    if (correct) {
-      const newStreak = correctStreak + 1;
-      setCorrectStreak(newStreak);
-      setIncorrectStreak(0);
-
-      if (newStreak >= 3) {
-        return {
-          message: "Amazing streak! You're on fire! 🔥",
-          type: 'streak' as const
-        };
-      }
-    } else {
-      const newStreak = incorrectStreak + 1;
-      setCorrectStreak(0);
-      setIncorrectStreak(newStreak);
-
-      if (newStreak >= 2) {
-        const messages = [
-          "Don't worry, even Einstein made mistakes! 🧠",
-          "Keep going! Success is stumbling from failure to failure! 💪",
-          "Every master was once a disaster! You've got this! 🌟"
-        ];
-        return {
-          message: messages[Math.floor(Math.random() * messages.length)],
-          type: 'warning' as const
-        };
-      }
-    }
-    return { message: "", type: 'normal' as const };
-  };
-
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
 
@@ -86,7 +49,6 @@ const MatchArena = () => {
     const correct = isCorrect;
     
     const pointsEarned = updateScores(correct, timeLeft, currentStudent.id);
-    
     const currentAnswerCount = updateStudentAnswerCount(currentStudent.id);
     const totalAnswers = Object.values(studentAnswerCounts).reduce((sum, count) => sum + count, 0);
     const shouldEnd = totalAnswers + 1 >= students.length * questionsPerStudent;
@@ -102,40 +64,15 @@ const MatchArena = () => {
       type: streakFeedback.type
     });
 
-    try {
-      const { error } = await supabase
-        .from('match_history')
-        .insert({
-          student_id: currentStudent.id,
-          word: wordList[currentWordIndex].word,
-          correct,
-          response_time: responseTime,
-          points_earned: pointsEarned,
-          answer_number: results.filter(r => r.student.id === currentStudent.id).length + 1,
-          difficulty
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving match result:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save match result",
-        variant: "destructive",
-      });
-    }
-
-    const newResult = { 
-      word: wordList[currentWordIndex].word,
+    await saveResult(
+      currentStudent,
+      wordList[currentWordIndex].word,
       correct,
-      student: currentStudent,
       responseTime,
       pointsEarned,
-      answerNumber: results.filter(r => r.student.id === currentStudent.id).length + 1,
-      answeredAt: new Date()
-    };
-
-    setResults(prev => [...prev, newResult]);
+      results.filter(r => r.student.id === currentStudent.id).length + 1,
+      difficulty
+    );
 
     setTimeout(() => {
       setShowFeedback(false);
@@ -197,22 +134,33 @@ const MatchArena = () => {
         <Podium rankings={rankings} />
 
         {!showResultsPopup && currentStudent && (
-          <WordDisplay
-            currentStudent={currentStudent}
-            word={wordList[currentWordIndex].word}
-            timeLeft={timeLeft}
-            maxTime={MAX_TIME}
-            potentialPoints={potentialPoints}
-            showPoints={showPoints}
-            earnedPoints={earnedPoints}
-            showFeedback={showFeedback}
-            feedback={feedback}
-            currentWordIndex={displayProgress}
-            totalQuestions={totalExpectedQuestions}
-            selectedLanguage={selectedLanguage}
-            chineseDefinition={wordList[currentWordIndex].chineseDefinition}
-            partOfSpeech={wordList[currentWordIndex].partOfSpeech}
-          />
+          <>
+            <WordDisplay
+              currentStudent={currentStudent}
+              word={wordList[currentWordIndex].word}
+              timeLeft={timeLeft}
+              maxTime={MAX_TIME}
+              potentialPoints={potentialPoints}
+              showPoints={showPoints}
+              earnedPoints={earnedPoints}
+              showFeedback={showFeedback}
+              feedback={feedback}
+              currentWordIndex={displayProgress}
+              totalQuestions={totalExpectedQuestions}
+              selectedLanguage={selectedLanguage}
+              chineseDefinition={wordList[currentWordIndex].chineseDefinition}
+              partOfSpeech={wordList[currentWordIndex].partOfSpeech}
+            />
+            <MatchProgress
+              currentStudent={currentStudent}
+              displayProgress={displayProgress}
+              totalExpectedQuestions={totalExpectedQuestions}
+            />
+            <FeedbackDisplay
+              showFeedback={showFeedback}
+              feedback={feedback}
+            />
+          </>
         )}
 
         <AnswerButtons

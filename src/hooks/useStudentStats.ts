@@ -42,7 +42,7 @@ export const useStudentStats = (students: Student[], results: MatchResult[]) => 
           variant: "destructive",
         });
       } finally {
-        setLoading = false;
+        setLoading(false);
       }
     };
 
