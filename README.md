@@ -1,4 +1,5 @@
 # Welcome to LearnMate project
+This is Carl, a little indie developer, we can have deep communictation via the X(CaoYuhaoCarl) and Wechat(caoyuhaocarl)😊.
 
 ## Project info
 A modern, gamified teaching assistant application.
