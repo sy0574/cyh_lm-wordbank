@@ -17,7 +17,7 @@ import { getStudentsByClass } from "@/utils/databaseQueries";
 const PreMatchSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(["Basic"]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["中考"]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [questionsPerStudent, setQuestionsPerStudent] = useState<number>(1);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
