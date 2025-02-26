@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
@@ -10,42 +9,133 @@ import MatchActions from "@/components/match-summary/MatchActions";
 import Rankings from "@/components/match-summary/Rankings";
 import StudentPerformanceContent from "@/components/match-summary/StudentPerformanceContent";
 import { generateReportHtml } from "@/utils/reportGenerator";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Student } from "@/types/match";
 
 const MatchSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [difficulty, setDifficulty] = useState("medium");
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const [selectedClass, setSelectedClass] = useState<string>("all");
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
 
+  // Fetch all students from Supabase
+  const { data: allStudents = [], isLoading: isLoadingAllStudents, refetch: refetchAllStudents } = useQuery({
+    queryKey: ['all-students'],
+    queryFn: async () => {
+      try {
+        console.log('Fetching all students from database');
+        const { data, error } = await supabase
+          .from('students')
+          .select('*');
+        
+        if (error) throw error;
+        
+        console.log(`Found ${data?.length || 0} students in database`);
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching all students:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load student data",
+          variant: "destructive",
+        });
+        return [];
+      }
+    },
+    staleTime: 0, // Don't cache this data
+  });
+
+  // Filter students based on selected class
+  const getStudentsForClass = (className: string, allStudentsList: Student[] = []) => {
+    if (className === "all") return allStudentsList;
+    return allStudentsList.filter(s => s.class === className);
+  };
+
+  // Set initial state from navigation or use all students from database
   useEffect(() => {
-    console.log("Location state:", location.state);
+    if (isLoadingAllStudents) return;
     
-    if (!location.state || !location.state.students || location.state.students.length === 0) {
-      console.log("Invalid state detected");
+    console.log("Location state:", location.state);
+    console.log("All students from DB:", allStudents);
+    
+    // If we have location state with students, use those
+    if (location.state?.students?.length > 0) {
+      setStudents(location.state.students);
+      setDifficulty(location.state.difficulty || "medium");
+      
+      if (!selectedStudentId && location.state.students.length > 0) {
+        setSelectedStudentId(location.state.students[0].id);
+      }
+    } 
+    // Otherwise use all students from database
+    else if (allStudents?.length > 0) {
+      // Here we need to filter students based on the selected class
+      const studentsForClass = getStudentsForClass(selectedClass, allStudents);
+      setStudents(studentsForClass);
+      
+      if (!selectedStudentId && studentsForClass.length > 0) {
+        setSelectedStudentId(studentsForClass[0].id);
+      }
+    } 
+    // No data available
+    else if (!location.state?.students?.length && !allStudents?.length) {
+      console.log("No student data available");
       toast({
-        title: "Invalid Access",
-        description: "Please start a new assessment from the home page.",
+        title: "No Data",
+        description: "No student data available. Start a new assessment or check database connection.",
         variant: "destructive",
       });
-      navigate("/");
-      return;
     }
+    
+    setIsLoadingInitialData(false);
+  }, [location.state, allStudents, isLoadingAllStudents, selectedStudentId, selectedClass]);
 
-    setStudents(location.state.students);
-    setDifficulty(location.state.difficulty || "medium");
-
-    if (location.state.students.length > 0 && !selectedStudentId) {
-      setSelectedStudentId(location.state.students[0].id);
-      setSelectedClass("all");
+  // Handle class change
+  const handleClassChange = async (newClass: string) => {
+    console.log(`Changing class from ${selectedClass} to ${newClass}`);
+    setSelectedClass(newClass);
+    
+    try {
+      // Refetch all students to ensure we have the latest data
+      await refetchAllStudents();
+      
+      // Get students for the selected class
+      const studentsInClass = newClass === "all" 
+        ? allStudents 
+        : allStudents.filter(s => s.class === newClass);
+      
+      // Update the students state with the filtered students
+      setStudents(studentsInClass);
+      
+      // Reset selected student when changing class
+      if (studentsInClass.length > 0) {
+        console.log(`Found ${studentsInClass.length} students in class ${newClass}`);
+        setSelectedStudentId(studentsInClass[0].id);
+      } else {
+        console.log(`No students found in class ${newClass}`);
+        setSelectedStudentId(undefined);
+      }
+    } catch (error) {
+      console.error('Error handling class change:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update class data",
+        variant: "destructive",
+      });
     }
-  }, [location.state, navigate, selectedStudentId]);
+  };
 
-  const { studentStats, timeFilter, setTimeFilter, loading } = useStudentStats(students, selectedClass);
-  const { getRankings } = useRankings(studentStats, students);
+  // Important: Pass allStudents to useStudentStats instead of the filtered students
+  // This ensures useStudentStats has access to all students and can filter internally
+  const { studentStats, timeFilter, setTimeFilter, loading: isLoadingStats, refetch: refetchStats } = useStudentStats(allStudents, selectedClass);
+  const { getRankings } = useRankings(studentStats, allStudents);
 
-  if (loading) {
+  // Show loading state
+  if (isLoadingInitialData || isLoadingAllStudents || isLoadingStats) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-accent"></div>
@@ -53,14 +143,29 @@ const MatchSummary = () => {
     );
   }
 
+  // Check if we have valid data
   if (!students || students.length === 0) {
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-4">
+        <h2 className="text-2xl font-semibold mb-4">No Data Available</h2>
+        <p className="text-slate-500 mb-6">No student data was found. Please start a new assessment or check database connection.</p>
+        <button 
+          className="px-4 py-2 bg-primary text-white rounded-md"
+          onClick={() => navigate("/")}
+        >
+          Return to Home
+        </button>
+      </div>
+    );
   }
 
-  const selectedStatsData = studentStats.find(stats => 
-    stats.name === students.find(s => s.id === selectedStudentId)?.name
-  );
+  // Find the selected student's stats
+  const selectedStatsData = studentStats.find(stats => {
+    const student = allStudents.find(s => s.id === selectedStudentId);
+    return stats.name === student?.name;
+  });
 
+  // Filter rankings by class
   const filteredRankings = getRankings().filter(ranking => 
     selectedClass === "all" || ranking.student.class === selectedClass
   );
@@ -77,7 +182,7 @@ const MatchSummary = () => {
     }
 
     const filteredStats = studentStats.filter(stat => {
-      const student = students.find(s => s.name === stat.name);
+      const student = allStudents.find(s => s.name === stat.name);
       return selectedClass === "all" || student?.class === selectedClass;
     });
 
@@ -98,7 +203,7 @@ const MatchSummary = () => {
           selectedClass={selectedClass}
           selectedStudentId={selectedStudentId}
           setSelectedStudentId={setSelectedStudentId}
-          setSelectedClass={setSelectedClass}
+          setSelectedClass={handleClassChange}
           timeFilter={timeFilter}
           setTimeFilter={setTimeFilter}
           selectedStatsData={selectedStatsData}

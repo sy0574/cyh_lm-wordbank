@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Podium from "@/components/Podium";
 import WordDisplay from "@/components/WordDisplay";
@@ -19,6 +18,7 @@ const MatchArena = () => {
   const navigate = useNavigate();
   const { students, wordList, questionsPerStudent, selectedLanguage } = location.state || {};
   const [isGuest, setIsGuest] = useState(true);
+  const initializedRef = useRef(false);
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
@@ -39,7 +39,17 @@ const MatchArena = () => {
       return;
     }
 
-    selectNextStudent();
+    // 确保只在第一次加载时选择学生
+    if (!initializedRef.current && !currentStudent) {
+      console.log("Initializing first student");
+      initializedRef.current = true;
+      
+      // 短暂延迟选择第一个学生，确保组件完全加载
+      setTimeout(() => {
+        const firstStudent = selectNextStudent();
+        console.log("First student selected:", firstStudent?.name);
+      }, 100);
+    }
 
     // Check authentication status
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,7 +62,7 @@ const MatchArena = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [wordList, students, navigate, selectNextStudent]);
+  }, [wordList, students, navigate, selectNextStudent, currentStudent]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (!currentStudent || !wordList[currentWordIndex] || isMatchComplete) return;
@@ -82,7 +92,14 @@ const MatchArena = () => {
         currentStudent.category || 'Basic'
       );
 
+      // 显示当前学生的反馈
+      setShowPoints(true);
+
+      // 使用一个临时变量保存当前回答问题的学生ID
+      const answeredStudentId = currentStudent.id;
+
       setTimeout(() => {
+        // 重置反馈动画
         setShowPoints(false);
         
         if (shouldEnd) {
@@ -90,6 +107,7 @@ const MatchArena = () => {
           return;
         }
         
+        // 选择下一个学生
         const nextStudent = selectNextStudent();
         
         if (nextStudent === null) {
@@ -97,6 +115,7 @@ const MatchArena = () => {
           return;
         }
         
+        // 确保已选择了新学生，更新UI
         if (currentWordIndex + 1 < wordList.length) {
           setCurrentWordIndex(prev => prev + 1);
           setWordStartTime(Date.now());

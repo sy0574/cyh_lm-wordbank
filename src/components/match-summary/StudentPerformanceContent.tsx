@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StudentSelector from "./StudentSelector";
 import ClassSelector from "./ClassSelector";
 import TimeFilter, { TimeFilter as TimeFilterType } from "./TimeFilter";
@@ -28,6 +27,38 @@ const getFeedback = (percentage: number) => {
   return "More practice needed";
 };
 
+// Map between tab values and time filter values
+const mapTabToTimeFilter = (tab: string): TimeFilterType => {
+  switch (tab) {
+    case "today":
+      return "today";
+    case "this-week":
+      return "this-week";
+    case "this-month":
+      return "this-month";
+    case "all":
+      return "all";
+    default:
+      return "all"; // Default to "all" for "current" and any other tab
+  }
+};
+
+// Map between time filter values and tab values
+const mapTimeFilterToTab = (filter: TimeFilterType): string => {
+  switch (filter) {
+    case "today":
+      return "today";
+    case "this-week":
+      return "this-week";
+    case "this-month":
+      return "this-month";
+    case "all":
+      return "all";
+    default:
+      return "current"; // Default "current" for any other filter
+  }
+};
+
 const StudentPerformanceContent = ({
   selectedClass,
   selectedStudentId,
@@ -38,8 +69,31 @@ const StudentPerformanceContent = ({
   selectedStatsData,
   difficulty,
 }: StudentPerformanceContentProps) => {
-  const [activeTab, setActiveTab] = useState("current");
-  const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / selectedStatsData.total) * 100) : 0;
+  // Initialize activeTab based on current timeFilter
+  const [activeTab, setActiveTab] = useState(mapTimeFilterToTab(timeFilter));
+
+  // 当标签页改变时，更新时间过滤器
+  useEffect(() => {
+    const newTimeFilter = mapTabToTimeFilter(activeTab);
+    console.log(`Tab changed to: ${activeTab}, setting time filter to: ${newTimeFilter}`);
+    setTimeFilter(newTimeFilter);
+  }, [activeTab, setTimeFilter]);
+
+  // When timeFilter changes externally, sync the activeTab
+  useEffect(() => {
+    const mappedTab = mapTimeFilterToTab(timeFilter);
+    if (mappedTab !== activeTab) {
+      console.log(`Time filter changed to: ${timeFilter}, syncing tab to: ${mappedTab}`);
+      setActiveTab(mappedTab);
+    }
+  }, [timeFilter, activeTab]);
+
+  // When class changes, we need to keep the current active tab
+  useEffect(() => {
+    console.log(`Class changed to: ${selectedClass}, keeping current tab: ${activeTab}`);
+  }, [selectedClass, activeTab]);
+
+  const percentage = selectedStatsData ? Math.round((selectedStatsData.correct / (selectedStatsData.total || 1)) * 100) : 0;
 
   const scoreData = selectedStatsData?.words.map(result => ({
     answerNumber: result.answerNumber,
@@ -64,14 +118,18 @@ const StudentPerformanceContent = ({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="current">Current Assessment</TabsTrigger>
-          <TabsTrigger value="history">Historical Data</TabsTrigger>
+          <TabsTrigger value="today">Today</TabsTrigger>
+          <TabsTrigger value="this-week">This Week</TabsTrigger>
+          <TabsTrigger value="this-month">This Month</TabsTrigger>
+          <TabsTrigger value="all">All Time</TabsTrigger>
         </TabsList>
+        
         <TabsContent value="current">
           <Card>
             <CardContent className="space-y-6 pt-6">
-              {!selectedStatsData ? (
+              {!selectedStatsData || selectedStatsData.total === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   暂无数据
                 </div>
@@ -88,11 +146,74 @@ const StudentPerformanceContent = ({
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="history">
+        
+        <TabsContent value="today">
           <Card>
             <CardContent className="space-y-6 pt-6">
-              <TimeFilter value={timeFilter} onChange={setTimeFilter} />
-              {!selectedStatsData ? (
+              {!selectedStatsData || selectedStatsData.total === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无历史数据
+                </div>
+              ) : (
+                <>
+                  <PerformanceMetrics
+                    percentage={percentage}
+                    averageResponseTime={selectedStatsData.averageResponseTime}
+                  />
+                  <PerformanceCharts data={scoreData} />
+                  <PerformanceDetails words={selectedStatsData.words} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="this-week">
+          <Card>
+            <CardContent className="space-y-6 pt-6">
+              {!selectedStatsData || selectedStatsData.total === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无历史数据
+                </div>
+              ) : (
+                <>
+                  <PerformanceMetrics
+                    percentage={percentage}
+                    averageResponseTime={selectedStatsData.averageResponseTime}
+                  />
+                  <PerformanceCharts data={scoreData} />
+                  <PerformanceDetails words={selectedStatsData.words} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="this-month">
+          <Card>
+            <CardContent className="space-y-6 pt-6">
+              {!selectedStatsData || selectedStatsData.total === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无历史数据
+                </div>
+              ) : (
+                <>
+                  <PerformanceMetrics
+                    percentage={percentage}
+                    averageResponseTime={selectedStatsData.averageResponseTime}
+                  />
+                  <PerformanceCharts data={scoreData} />
+                  <PerformanceDetails words={selectedStatsData.words} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="all">
+          <Card>
+            <CardContent className="space-y-6 pt-6">
+              {!selectedStatsData || selectedStatsData.total === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   暂无历史数据
                 </div>
@@ -111,7 +232,7 @@ const StudentPerformanceContent = ({
         </TabsContent>
       </Tabs>
 
-      {selectedStatsData && (
+      {selectedStatsData && selectedStatsData.total > 0 && (
         <div className="text-accent font-medium text-center">
           {getFeedback(percentage)}
         </div>

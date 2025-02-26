@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Student } from "@/types/match";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +12,12 @@ interface StudentListProps {
 
 export const StudentList = ({ availableStudents, onStudentsChange }: StudentListProps) => {
   const [selectedStudents, setSelectedStudents] = useState<Student[]>(availableStudents);
+
+  // Update selected students when availableStudents changes
+  useEffect(() => {
+    setSelectedStudents(availableStudents);
+    onStudentsChange(availableStudents);
+  }, [availableStudents, onStudentsChange]);
 
   const handleStudentToggle = (checked: boolean, student: Student) => {
     let newSelectedStudents: Student[];

@@ -1,7 +1,7 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { getUniqueClasses } from "@/utils/databaseQueries";
+import { useEffect } from "react";
 
 interface ClassSelectorProps {
   selectedClass: string;
@@ -9,10 +9,23 @@ interface ClassSelectorProps {
 }
 
 const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => {
-  const { data: classes = [], isLoading } = useQuery({
+  const { data: classes = [], isLoading, refetch } = useQuery({
     queryKey: ['classes'],
-    queryFn: getUniqueClasses
+    queryFn: getUniqueClasses,
+    staleTime: 0 // Always fetch the latest classes
   });
+
+  // Force a refetch when component mounts
+  useEffect(() => {
+    console.log('ClassSelector: Forcing refetch of classes');
+    refetch();
+  }, [refetch]);
+
+  // Log available classes for debugging
+  useEffect(() => {
+    console.log(`ClassSelector: ${classes.length} classes available:`, classes);
+    console.log(`ClassSelector: Currently selected class: ${selectedClass}`);
+  }, [classes, selectedClass]);
 
   if (isLoading) {
     return (
@@ -26,7 +39,13 @@ const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => 
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">班级</label>
-      <Select value={selectedClass} onValueChange={onClassChange}>
+      <Select 
+        value={selectedClass} 
+        onValueChange={(value) => {
+          console.log(`ClassSelector: Changing class to: ${value}`);
+          onClassChange(value);
+        }}
+      >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="选择班级" />
         </SelectTrigger>
@@ -39,6 +58,10 @@ const ClassSelector = ({ selectedClass, onClassChange }: ClassSelectorProps) => 
           ))}
         </SelectContent>
       </Select>
+      {/* Debug info - remove in production */}
+      <div className="text-xs text-muted-foreground">
+        {classes.length} classes available
+      </div>
     </div>
   );
 };

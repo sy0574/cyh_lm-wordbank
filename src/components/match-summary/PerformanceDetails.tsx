@@ -1,4 +1,3 @@
-
 interface WordResult {
   word: string;
   correct: boolean;
@@ -11,6 +10,18 @@ interface PerformanceDetailsProps {
 }
 
 const PerformanceDetails = ({ words }: PerformanceDetailsProps) => {
+  // Handle empty state
+  if (!words || words.length === 0) {
+    return (
+      <div>
+        <div className="text-sm font-medium mb-2">Performance Details</div>
+        <div className="text-center py-4 text-muted-foreground">
+          No performance data available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="text-sm font-medium mb-2">Performance Details</div>

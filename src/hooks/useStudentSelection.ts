@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Student, MatchResult } from "@/types/match";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +16,11 @@ export const useStudentSelection = (
   const [lastSelectedStudentId, setLastSelectedStudentId] = useState<string | null>(null);
 
   const announceStudent = async (student: Student) => {
+    if (!student) {
+      console.warn("Cannot announce null student");
+      return;
+    }
+    
     console.log("Attempting to announce student:", student.name);
 
     if (!('speechSynthesis' in window)) {
@@ -27,7 +31,10 @@ export const useStudentSelection = (
     try {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Add a small delay to ensure previous speech is fully canceled
+      // and UI has updated to show the correct student
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Create and configure utterance
       const utterance = new SpeechSynthesisUtterance(student.name);
@@ -76,18 +83,21 @@ export const useStudentSelection = (
   };
 
   const selectNextStudent = () => {
-    // 重要: 如果已经选择了当前学生，就不要重新选择
-    if (currentStudent) {
-      console.log("Current student already selected:", currentStudent.name);
-      return currentStudent;
+    // If there are no students available, end the match
+    if (!students || students.length === 0) {
+      console.log("No students available");
+      setCurrentStudent(null);
+      return null;
     }
 
+    // Check if match should end based on question count
     if (shouldEndMatch()) {
       console.log("Match should end, no more students to select");
       setCurrentStudent(null);
       return null;
     }
 
+    // Find students who still need to answer questions
     const availableStudents = students.filter(student => 
       (studentAnswerCounts[student.id] || 0) < questionsPerStudent
     );
@@ -98,31 +108,35 @@ export const useStudentSelection = (
       return null;
     }
 
+    let selectedStudent: Student;
+
+    // If there's only one student available, select them
     if (availableStudents.length === 1) {
-      const selectedStudent = availableStudents[0];
-      setCurrentStudent(selectedStudent);
-      setLastSelectedStudentId(selectedStudent.id);
-      announceStudent(selectedStudent);
-      return selectedStudent;
+      selectedStudent = availableStudents[0];
+    } else {
+      // Try to select a different student than the last one
+      const eligibleStudents = availableStudents.filter(
+        student => student.id !== lastSelectedStudentId
+      );
+
+      if (eligibleStudents.length === 0) {
+        // If no eligible students, select randomly from available students
+        const randomIndex = Math.floor(Math.random() * availableStudents.length);
+        selectedStudent = availableStudents[randomIndex];
+      } else {
+        // Select randomly from eligible students
+        const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
+        selectedStudent = eligibleStudents[randomIndex];
+      }
     }
 
-    const eligibleStudents = availableStudents.filter(
-      student => student.id !== lastSelectedStudentId
-    );
-
-    if (eligibleStudents.length === 0) {
-      const selectedStudent = availableStudents[0];
-      setCurrentStudent(selectedStudent);
-      setLastSelectedStudentId(selectedStudent.id);
-      announceStudent(selectedStudent);
-      return selectedStudent;
-    }
-
-    const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
-    const selectedStudent = eligibleStudents[randomIndex];
-
+    console.log("Selected student:", selectedStudent.name);
+    
+    // Set the new selected student
     setCurrentStudent(selectedStudent);
     setLastSelectedStudentId(selectedStudent.id);
+    
+    // Announce the selected student
     announceStudent(selectedStudent);
 
     return selectedStudent;
@@ -135,8 +149,8 @@ export const useStudentSelection = (
         ...prev,
         [studentId]: newCount
       }));
-      // 当学生回答完一个问题后，清除当前学生，这样下一轮才会选择新学生
-      setCurrentStudent(null);
+      // 不要立即清除当前学生，让当前学生保持显示直到新学生被选择
+      // setCurrentStudent(null);
       return newCount;
     }
     return studentAnswerCounts[studentId] || 0;

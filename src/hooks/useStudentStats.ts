@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Student, StudentStats, MatchResult } from "@/types/match";
 import { TIME_FILTERS, TimeFilter } from "@/components/match-summary/TimeFilter";
@@ -8,15 +7,85 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useStudentStats = (students: Student[], selectedClass: string) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(TIME_FILTERS.ALL);
+  const [lastProcessedClass, setLastProcessedClass] = useState<string>(selectedClass);
+  const [classStudents, setClassStudents] = useState<Student[]>(students || []);
+
+  // Update class students when students array or selectedClass changes
+  useEffect(() => {
+    if (selectedClass !== lastProcessedClass) {
+      console.log(`Class changed from ${lastProcessedClass} to ${selectedClass}, triggering refetch`);
+      setLastProcessedClass(selectedClass);
+    }
+    
+    // Filter students for the selected class
+    const relevantStudents = students.filter(s => 
+      selectedClass === "all" || s.class === selectedClass
+    );
+    
+    console.log(`useStudentStats: Filtered ${relevantStudents.length} students for class ${selectedClass} from ${students.length} total students`);
+    setClassStudents(relevantStudents);
+  }, [students, selectedClass, lastProcessedClass]);
+
+  // Additional safety query to directly get students if needed
+  const { data: directClassStudents = [], refetch: refetchDirectStudents } = useQuery({
+    queryKey: ['direct-class-students', selectedClass],
+    queryFn: async () => {
+      try {
+        if (selectedClass === "all") {
+          console.log(`useStudentStats: Directly fetching all students`);
+          const { data, error } = await supabase
+            .from('students')
+            .select('*');
+          
+          if (error) throw error;
+          console.log(`useStudentStats: Directly found ${data?.length || 0} students`);
+          return data || [];
+        } else {
+          console.log(`useStudentStats: Directly fetching students for class ${selectedClass}`);
+          const { data, error } = await supabase
+            .from('students')
+            .select('*')
+            .eq('class', selectedClass);
+          
+          if (error) throw error;
+          console.log(`useStudentStats: Directly found ${data?.length || 0} students in class ${selectedClass}`);
+          return data || [];
+        }
+      } catch (error) {
+        console.error('Error directly fetching students:', error);
+        return [];
+      }
+    },
+    enabled: true,
+  });
+
+  // Combine both sources of students
+  const effectiveStudents = classStudents.length > 0 ? classStudents : directClassStudents;
+
+  // Force refetch of direct students when class changes
+  useEffect(() => {
+    refetchDirectStudents();
+  }, [selectedClass, refetchDirectStudents]);
 
   const filterResultsByTime = (results: MatchResult[]) => {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const weekDate = new Date(now);
+    const startOfWeek = new Date(weekDate.setDate(weekDate.getDate() - weekDate.getDay()));
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    console.log(`Time filtering with filter: ${timeFilter}`);
+    console.log(`- Start of day: ${startOfDay.toISOString()}`);
+    console.log(`- Start of week: ${startOfWeek.toISOString()}`);
+    console.log(`- Start of month: ${startOfMonth.toISOString()}`);
+
     return results.filter(result => {
-      const resultDate = result.answeredAt;
+      if (!result.answeredAt) return false;
+      
+      const resultDate = result.answeredAt instanceof Date ? 
+        result.answeredAt : 
+        new Date(result.answeredAt);
+      
       switch (timeFilter) {
         case TIME_FILTERS.TODAY:
           return resultDate >= startOfDay;
@@ -30,9 +99,21 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
     });
   };
 
-  const processMatchHistory = async (studentIds: string[]): Promise<StudentStats[]> => {
+  interface MatchHistoryRecord {
+    student_id: string;
+    word: string;
+    correct: boolean;
+    response_time: number;
+    points_earned: number;
+    answer_number: number;
+    answered_at: string;
+  }
+
+  const fetchMatchHistory = async (studentIds: string[]): Promise<MatchHistoryRecord[]> => {
     try {
-      const { data: matchHistoryData, error } = await supabase
+      console.log(`Fetching match history for students:`, studentIds);
+      
+      const { data, error } = await supabase
         .from('match_history')
         .select('*')
         .in('student_id', studentIds);
@@ -42,35 +123,50 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
         throw error;
       }
 
-      console.log(`Found ${matchHistoryData?.length || 0} match history records`);
+      console.log(`Fetched ${data?.length || 0} match history records`);
+      return data || [];
+    } catch (error) {
+      console.error('Error in fetchMatchHistory:', error);
+      return [];
+    }
+  };
 
-      const formattedResults: MatchResult[] = (matchHistoryData || []).map(result => {
-        const student = students.find(s => s.id === result.student_id);
-        if (!student) {
-          console.log('Student not found for ID:', result.student_id);
-          return null;
-        }
-        return {
-          word: result.word,
-          correct: result.correct,
-          student: student,
-          responseTime: result.response_time,
-          pointsEarned: result.points_earned,
-          answerNumber: result.answer_number,
-          answeredAt: new Date(result.answered_at || Date.now())
-        };
-      }).filter((result): result is MatchResult => result !== null);
+  const processMatchHistory = async (studentIds: string[]): Promise<StudentStats[]> => {
+    try {
+      if (studentIds.length === 0) {
+        console.log('No students to fetch match history for');
+        return [];
+      }
+
+      // Fetch match history data
+      const matchHistoryData = await fetchMatchHistory(studentIds);
+      console.log(`Processing ${matchHistoryData.length} match history records for class: ${selectedClass}`);
+
+      // Need to use effectiveStudents here to ensure we have the right student data
+      const formattedResults: MatchResult[] = matchHistoryData
+        .map(result => {
+          const student = effectiveStudents.find(s => s.id === result.student_id);
+          if (!student) {
+            console.log('Student not found for ID:', result.student_id);
+            return null;
+          }
+          return {
+            word: result.word,
+            correct: result.correct,
+            student: student,
+            responseTime: result.response_time,
+            pointsEarned: result.points_earned,
+            answerNumber: result.answer_number,
+            answeredAt: new Date(result.answered_at || Date.now())
+          };
+        })
+        .filter((result): result is MatchResult => result !== null);
 
       const filteredResults = filterResultsByTime(formattedResults);
-      console.log('Time-filtered results:', filteredResults);
+      console.log(`After time filtering (${timeFilter}): ${filteredResults.length} results`);
 
-      const relevantStudents = students.filter(student => 
-        selectedClass === "all" || student.class === selectedClass
-      );
-
-      console.log('Processing stats for students:', relevantStudents);
-
-      return relevantStudents.map(student => {
+      // Use effectiveStudents instead of students
+      return effectiveStudents.map(student => {
         const studentResults = filteredResults.filter(r => r.student.id === student.id);
         const correct = studentResults.filter(r => r.correct).length;
         const totalResponseTime = studentResults.reduce(
@@ -78,7 +174,7 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
           0
         );
 
-        return {
+        const stats = {
           name: student.name,
           avatar: student.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${student.id}`,
           correct,
@@ -96,6 +192,9 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
             answeredAt: r.answeredAt,
           })),
         };
+        
+        console.log(`Stats for student ${student.name}: ${stats.total} entries, ${stats.correct} correct`);
+        return stats;
       });
     } catch (error) {
       console.error('Error processing match history:', error);
@@ -104,25 +203,23 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
         description: "Failed to process match history data",
         variant: "destructive",
       });
-      throw error;
+      return [];
     }
   };
 
-  const { data: studentStats = [], isLoading: loading } = useQuery({
-    queryKey: ['matchHistory', selectedClass, timeFilter],
+  const { data: studentStats = [], isLoading: loading, refetch } = useQuery({
+    queryKey: ['matchHistory', selectedClass, timeFilter, effectiveStudents.length],
     queryFn: async () => {
       try {
-        const relevantStudents = students.filter(s => 
-          selectedClass === "all" || s.class === selectedClass
-        );
-
-        if (relevantStudents.length === 0) {
+        console.log(`Executing matchHistory query for class: ${selectedClass}, timeFilter: ${timeFilter}`);
+        
+        if (effectiveStudents.length === 0) {
           console.log('No students found for selected class:', selectedClass);
           return [];
         }
 
-        const studentIds = relevantStudents.map(s => s.id);
-        console.log('Fetching match history for students:', studentIds);
+        const studentIds = effectiveStudents.map(s => s.id);
+        console.log('Processing match history for students:', studentIds);
         
         return await processMatchHistory(studentIds);
       } catch (error) {
@@ -135,16 +232,22 @@ export const useStudentStats = (students: Student[], selectedClass: string) => {
         return [];
       }
     },
-    enabled: students.length > 0,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep in garbage collection for 30 minutes
+    enabled: true,
+    staleTime: 0, // Don't cache this data
   });
+
+  // Force refetch when class or time filter changes
+  useEffect(() => {
+    console.log(`Refetching due to change in: class=${selectedClass} or timeFilter=${timeFilter}`);
+    refetch();
+  }, [selectedClass, timeFilter, effectiveStudents, refetch]);
 
   return {
     studentStats,
     timeFilter,
     setTimeFilter,
-    loading
+    loading,
+    refetch
   };
 };
 
