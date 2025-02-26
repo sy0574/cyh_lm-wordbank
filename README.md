@@ -1,18 +1,12 @@
 # Welcome to your Lovable project
 
 ## Project info
+A modern, gamified teaching assistant application.
 
-**URL**: https://lovable.dev/projects/8d8f4b24-b884-4e2d-b971-cab697471ee6
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/8d8f4b24-b884-4e2d-b971-cab697471ee6) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
@@ -59,10 +53,6 @@ This project is built with .
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/8d8f4b24-b884-4e2d-b971-cab697471ee6) and click on Share -> Publish.
 
 ## I want to use a custom domain - is that possible?
 
