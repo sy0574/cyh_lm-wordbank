@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to OUR AI project
 
 ## Project info
 A modern, gamified teaching assistant application.
