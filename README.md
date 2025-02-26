@@ -1,4 +1,4 @@
-# Welcome to OUR AI project
+# Welcome to LearnMate project
 
 ## Project info
 A modern, gamified teaching assistant application.
