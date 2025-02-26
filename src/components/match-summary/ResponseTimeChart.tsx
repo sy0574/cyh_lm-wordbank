@@ -61,7 +61,6 @@ const ResponseTimeChart = ({ data }: ResponseTimeChartProps) => {
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="answerNumber" label={{ value: 'Answer Number', position: 'bottom' }} />
           <YAxis label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
