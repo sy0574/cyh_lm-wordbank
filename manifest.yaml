@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-english-learn-mate
+  name: lm-wordbank
   labels:
-    app: ai-english-learn-mate
+    app: lm-wordbank
   namespace: bolone
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-english-learn-mate
+      app: lm-wordbank
   template:
     metadata:
       labels:
-        app: ai-english-learn-mate
+        app: lm-wordbank
     spec:
       containers:
-        - name: ai-english-learn-mate
+        - name: lm-wordbank
           image: ${image}
           imagePullPolicy: Always
           ports:
             - containerPort: 5173
-        - name: ai-english-learn-mate-tts
+        - name: lm-wordbank-tts
           image: ${image}
           imagePullPolicy: Always
           ports:
@@ -34,10 +34,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai-english-learn-mate
+  name: lm-wordbank
   namespace: bolone
   labels:
-    app: ai-english-learn-mate
+    app: lm-wordbank
 spec:
   clusterIP: None
   clusterIPs:
@@ -52,7 +52,7 @@ spec:
       protocol: TCP
       targetPort: 3001
   selector:
-    app: ai-english-learn-mate
+    app: lm-wordbank
   sessionAffinity: None
   type: ClusterIP
 
@@ -60,36 +60,36 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ai-english-learn-mate
+  name: lm-wordbank
   namespace: bolone
   labels:
-    app: ai-english-learn-mate
+    app: lm-wordbank
 spec:
   rules:
-    - host: ai-english-learn-mate.bolone.cn
+    - host: lm-wordbank.bolone.cn
       http:
         paths:
           - backend:
               service:
-                name: ai-english-learn-mate
+                name: lm-wordbank
                 port:
                   number: 5173
             path: /
             pathType: ImplementationSpecific
-    - host: ai-english-learn-mate-tts.bolone.cn
+    - host: lm-wordbank-tts.bolone.cn
       http:
         paths:
           - backend:
               service:
-                name: ai-english-learn-mate
+                name: lm-wordbank
                 port:
                   number: 3001
             path: /
             pathType: ImplementationSpecific
   tls:
     - hosts:
-        - ai-english-learn-mate.bolone.cn
+        - lm-wordbank.bolone.cn
       secretName: ssl-bolone.cn-secret
     - hosts:
-        - ai-english-learn-mate-tts.bolone.cn
+        - lm-wordbank-tts.bolone.cn
       secretName: ssl-bolone.cn-secret

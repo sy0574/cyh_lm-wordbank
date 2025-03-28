@@ -24,13 +24,13 @@ services:
     #   timeout: 3s
     #   retries: 3
 
-  tts:
-    build: .
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - ./dist:/app/dist
-    restart: unless-stopped
-    command: ["node", "start-tts-server.mjs"]
+  # tts:
+  #   build: .
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - NODE_ENV=production
+  #   volumes:
+  #     - ./dist:/app/dist
+  #   restart: unless-stopped
+  #   command: ["node", "start-tts-server.mjs"]
