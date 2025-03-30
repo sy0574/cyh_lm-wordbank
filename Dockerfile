@@ -24,7 +24,7 @@ RUN npm install
 COPY . .
 
 # 构建应用
-RUN npm run dev
+RUN npm run build
 
 # 暴露端口
 EXPOSE 8080
