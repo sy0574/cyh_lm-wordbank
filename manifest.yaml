@@ -20,15 +20,7 @@ spec:
           image: ${image}
           imagePullPolicy: Always
           ports:
-            - containerPort: 5173
-        # - name: lm-wordbank-tts
-        #   image: ${image}
-        #   imagePullPolicy: Always
-        #   ports:
-        #     - containerPort: 3001
-        #   command:
-        #     - node
-        #     - start-tts-server.mjs
+            - containerPort: 8080
 
 ---
 apiVersion: v1
@@ -43,10 +35,10 @@ spec:
   clusterIPs:
     - None
   ports:
-    - name: http5173
-      port: 5173
+    - name: http8080
+      port: 8080
       protocol: TCP
-      targetPort: 5173
+      targetPort: 8080
     # - name: http3001
     #   port: 3001
     #   protocol: TCP
@@ -73,23 +65,10 @@ spec:
               service:
                 name: lm-wordbank
                 port:
-                  number: 5173
+                  number: 8080
             path: /
             pathType: ImplementationSpecific
-    # - host: lm-wordbank-tts.bolone.cn
-    #   http:
-    #     paths:
-    #       - backend:
-    #           service:
-    #             name: lm-wordbank
-    #             port:
-    #               number: 3001
-    #         path: /
-    #         pathType: ImplementationSpecific
   tls:
     - hosts:
         - lm-wordbank.bolone.cn
       secretName: ssl-bolone.cn-secret
-    # - hosts:
-    #     - lm-wordbank-tts.bolone.cn
-    #   secretName: ssl-bolone.cn-secret

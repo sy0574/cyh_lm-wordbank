@@ -24,18 +24,11 @@ RUN npm install
 COPY . .
 
 # 构建应用
-RUN npm run build
+RUN npm run dev
 
 # 暴露端口
-EXPOSE 5173
-# EXPOSE 3001
+EXPOSE 8080
 
 # # 添加健康检查
 # HEALTHCHECK --interval=30s --timeout=3s \
 #   CMD curl -f http://localhost:5173/ || exit 1
-
-# 启动tts服务
-# CMD ["node", "start-tts-server.mjs"]
-
-# 启动应用
-CMD ["npm", "run", "serve"]
