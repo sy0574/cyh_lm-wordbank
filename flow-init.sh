@@ -12,6 +12,7 @@ echo env:$env
 appfullname=${app}-${env}
 echo appfullname:$appfullname
 
+namespace=bolone
 
 replicas=1
 requestsCpu=1m
@@ -21,9 +22,9 @@ dockerEnd=''
 
 
 echo 'sed Deployment.yaml'
-sed -i "s#\${name}#appfullname#g" Deployment.yaml
+sed -i "s#\${name}#$appfullname#g" Deployment.yaml
 echo 'sed Deployment.yaml'
-sed -i "s#\${namespace}#bolone#g" Deployment.yaml
+sed -i "s#\${namespace}#$namespace#g" Deployment.yaml
 echo 'sed Deployment.replicas'
 sed -i "s#\${replicas}#$replicas#g" Deployment.yaml
 
