@@ -3,10 +3,9 @@ source ./flow-arg.sh
 echo $CI_SOURCE_NAME
 echo $CI_COMMIT_REF_NAME
 
-app=$CI_SOURCE_NAME
+app=lm-wordbank
 echo app:$app
-appname=$CI_SOURCE_NAME
-echo appname:$appname
+
 env=$CI_COMMIT_REF_NAME
 echo env:$env
 
