@@ -59,16 +59,16 @@ metadata:
     app: ${name}
 spec:
   rules:
-    - host: ${ingressHost2}
-      http:
-        paths:
-          - backend:
-              service:
-                name: ${name}-2
-                port:
-                  number: 80
-            path: /
-            pathType: ImplementationSpecific
+    # - host: ${ingressHost2}
+    #   http:
+    #     paths:
+    #       - backend:
+    #           service:
+    #             name: ${name}-2
+    #             port:
+    #               number: 80
+    #         path: /
+    #         pathType: ImplementationSpecific
     - host: ${ingressHostSsl}
       http:
         paths:
