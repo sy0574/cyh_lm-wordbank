@@ -28,7 +28,7 @@ dockerEnd=''
 echo 'sed Deployment.yaml'
 sed -i "s#\${name}#$CI_COMMIT_REF_NAME#g" Deployment.yaml
 echo 'sed Deployment.yaml'
-sed -i "s#\${namespace}#flow#g" Deployment.yaml
+sed -i "s#\${namespace}#bolone#g" Deployment.yaml
 echo 'sed Deployment.replicas'
 sed -i "s#\${replicas}#$replicas#g" Deployment.yaml
 
